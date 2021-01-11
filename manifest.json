@@ -1,0 +1,16 @@
+{
+  "domain": "beoplay",
+  "name": "BeoPlay for Bang & Olufsen",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/beoplay",
+  "requirements": [
+    "ha-beoplay==0.0.6"
+  ],
+  "ssdp": [],
+  "zeroconf": ["_beoremote._tcp.local."],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@giachello"
+  ]
+}

@@ -1,0 +1,12 @@
+beoplay_join_experience:
+  description: "Join Experience."
+  fields:
+    entity_id:
+      description: "A media player Entity ID."
+      example: "media_player.my_chromecast"
+beoplay_leave_experience:
+  description: "Leave Experience."
+  fields:
+    entity_id:
+      description: "A media player Entity ID."
+      example: "media_player.my_chromecast"
