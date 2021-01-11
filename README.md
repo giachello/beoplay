@@ -17,7 +17,7 @@ Currently this is heavily under development so YMMV
 
 It should show up as something like this:
 
-
+![beoplay_mini_media_player.png](./beoplay_mini_media_player.png)
 
 ## Services
 
