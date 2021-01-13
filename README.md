@@ -6,12 +6,9 @@ This component enables integration with B&O equipment and Home Assistant.
 
 Installation for the moment is in the custom_components.
 
-Configuration is very simple, either using Config Flow, or you can try to config using Configuration.yaml
+Configuration is very simple, go to Configuration -> Integrations, search for BeoPlay and insert the IP.
 
-```
-beoplay:
-    host: 192.168.xx.xx
-```
+At the moment we only support one device at the time. More improvements coming!
 
 Currently this is heavily under development so YMMV
 
