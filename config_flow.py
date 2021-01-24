@@ -1,10 +1,9 @@
 """Config flow for BeoPlay for Bang & Olufsen."""
 import beoplay
 
-
 import ipaddress
 import re
-
+import logging
 
 from homeassistant import config_entries, exceptions
 from homeassistant.helpers import config_entry_flow
@@ -13,6 +12,9 @@ from homeassistant.const import CONF_HOST, CONF_TYPE
 import voluptuous as vol
 
 from .const import DOMAIN, BEOPLAY_TYPES
+
+_LOGGER = logging.getLogger(__name__)
+
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -61,6 +63,7 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
+        _LOGGER.debug("Async Step User Config Flow called")
 
         if user_input is not None:
             try:
@@ -88,9 +91,10 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         if discovery_info is None:
             return self.async_abort(reason="cannot_connect")
+        _LOGGER.debug("Async Step Zeroconf Config Flow called")
 
         if not discovery_info.get("name") or not discovery_info["name"].startswith(
-            "BeoPlay"
+            "Beo"
         ):
             return self.async_abort(reason="not_beoplay_device")
 
@@ -98,21 +102,29 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.host = discovery_info["hostname"].rstrip(".")
 
         self.beoplayapi = beoplay.BeoPlay(self.host)
-        # try:
-        #     await self.brother.async_update()
-        # except (ConnectionError, SnmpError, UnsupportedModel):
-        #     return self.async_abort(reason="cannot_connect")
+        try:
+            await self.hass.async_add_executor_job(self.beoplayapi.getDeviceInfo)
+        except Exception as e:
+            _LOGGER.debug("Exception %s" % str(e))
+            _LOGGER.debug(
+                "Could not connect with %s as %s"
+                % (self.beoplayapi._name, str(self.host))
+            )
+            return self.async_abort(reason="cannot_connect")
 
         # Check if already configured
-        # await self.async_set_unique_id(self.brother.serial.lower())
-        # self._abort_if_unique_id_configured()
+        await self.async_set_unique_id(self.beoplayapi._serialNumber)
+        self._abort_if_unique_id_configured()
+        _LOGGER.debug(
+            "Async Step Zeroconf set unique ID: %s" % self.beoplayapi._serialNumber
+        )
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
                 "title_placeholders": {
-                    "serial_number": "BEOPLAY DEVICE",
-                    "model": "DONT KNOW",
+                    "serial_number": self.beoplayapi._serialNumber,
+                    "model": self.beoplayapi._name,
                 }
             }
         )
@@ -120,29 +132,31 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf_confirm(self, user_input=None):
         """Handle a flow initiated by zeroconf."""
-        r = self.beoplayapi._getReq("BeoDevice")
-        if r:
-            _serialNumber = r["beoDevice"]["productId"]["serialNumber"]
-            _typeNumber = r["beoDevice"]["productId"]["typeNumber"]
-            _name = r["beoDevice"]["productFriendlyName"]["productFriendlyName"]
-            if user_input is not None:
-                title = f"{_name} {_serialNumber}"
-                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-                return self.async_create_entry(
-                    title=title,
-                    data={CONF_HOST: self.host, CONF_TYPE: user_input[CONF_TYPE]},
-                )
-            return self.async_show_form(
-                step_id="zeroconf_confirm",
-                data_schema=vol.Schema(
-                    {vol.Optional(CONF_TYPE, default="Speaker"): vol.In(BEOPLAY_TYPES)}
-                ),
-                description_placeholders={
-                    "serial_number": _serialNumber,
-                    "model": _typeNumber,
-                    "name": _name,
-                },
+
+        _serialNumber = self.beoplayapi._serialNumber
+        _typeNumber = self.beoplayapi._typeNumber
+        _name = self.beoplayapi._name
+        if user_input is not None:
+            title = f"{_name} {_serialNumber}"
+            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+            return self.async_create_entry(
+                title=title,
+                data={CONF_HOST: self.host, CONF_TYPE: user_input[CONF_TYPE]},
             )
+
+        _LOGGER.debug("Calling zeroconf_confirm: %s" % self.beoplayapi._name)
+
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            data_schema=vol.Schema(
+                {vol.Optional(CONF_TYPE, default="Speaker"): vol.In(BEOPLAY_TYPES)}
+            ),
+            description_placeholders={
+                "serial_number": _serialNumber,
+                "model": _typeNumber,
+                "name": _name,
+            },
+        )
 
 
 class InvalidHost(exceptions.HomeAssistantError):

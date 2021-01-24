@@ -2,4 +2,4 @@
 
 DOMAIN = "beoplay"
 
-BEOPLAY_TYPES = ["TV", "Speaker"]
+BEOPLAY_TYPES = ["TV", "Speaker", "NL/ML Converter"]

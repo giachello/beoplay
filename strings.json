@@ -1,9 +1,20 @@
 {
-  "title": "BeoPlay for Bang & Olufsen",
   "config": {
+    "flow_title": "BeoPlay device: {name} {serial_number}",
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "user": {
+        "description": "Set up BeoPlay device. If you have problems with configuration go to: https://github.com/giachello/beoplay",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "type": "Device type"
+        }
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add {name} with serial number `{serial_number}` to Home Assistant?",
+        "title": "Discovered BeoPlay device",
+        "data": {
+          "type": "Device type"
+        }
       }
     },
     "abort": {
