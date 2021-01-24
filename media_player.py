@@ -13,7 +13,8 @@ import async_timeout
 import voluptuous as vol
 
 import json
-import beoplay as beoplay
+
+import pybeoplay as beoplay
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -54,7 +55,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ["ha-beoplay"]
+REQUIREMENTS = ["pybeoplay"]
 
 _LOGGER = logging.getLogger(__name__)
 

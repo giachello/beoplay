@@ -1,5 +1,5 @@
 """Config flow for BeoPlay for Bang & Olufsen."""
-import beoplay
+import pybeoplay as beoplay
 
 import ipaddress
 import re
@@ -76,12 +76,15 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 #                self._abort_if_unique_id_configured()
 
                 #                title = f"{brother.model} {brother.serial}"
-                title = "beoplay"
+                await self.hass.async_add_executor_job(self.beoplayapi.getDeviceInfo)
+                title = f"{self.beoplayapi._name}"
                 return self.async_create_entry(title=title, data=user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
             except ConnectionError:
                 errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.warning("Other error connecting with Beoplay device")
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -137,7 +140,7 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _typeNumber = self.beoplayapi._typeNumber
         _name = self.beoplayapi._name
         if user_input is not None:
-            title = f"{_name} {_serialNumber}"
+            title = f"{_name}"
             # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             return self.async_create_entry(
                 title=title,
