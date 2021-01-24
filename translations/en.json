@@ -10,15 +10,15 @@
                     "host": "Host",
                     "type": "Device Type"
                 },
-                "description": "Set up BeoPlay device. If you have problems with configuration go to: https://github.com/giachello/beoplay",
-                "title": "BeoPlay Device: {model} {serial_number}"
+                "description": "Set up BeoPlay device. If you have problems with the configuration check out: https://github.com/giachello/beoplay",
+                "title": "BeoPlay Add Device"
             },
             "zeroconf_confirm": {
                 "data": {
                     "type": "Device Type"
                 },
-                "description": "Do you want to add {name} with serial number `{serial_number}` to Home Assistant?",
-                "title": "BeoPlay Device: {model} {serial_number}"
+                "description": "Do you want to add {name} with serial number {serial_number} to Home Assistant?",
+                "title": "Discovered BeoPlay device"
             }
         }
     },
