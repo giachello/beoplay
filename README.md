@@ -1,6 +1,6 @@
 # BeoPlay: Bang & Olufsen Speakers and TVs in Home Assistant
 
-This component enables integration with B&O equipment and Home Assistant. 
+This component enables integration of B&O Audio/Video equipment with Home Assistant and specifically TVs, Speakers and units like the BeoLink Converter ML/NL. 
 
 ## Installation
 
