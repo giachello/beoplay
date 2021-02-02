@@ -401,9 +401,7 @@ class BeoPlay(MediaPlayerEntity):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self._source == "AirPlay":
-            return "Airplay"
-        elif self._source == "Google Cast":
+        if self._source == "Google Cast":
             return self._media_album
         # return self._speaker.source if self._speaker.source else None
         return self._media_track if self._media_track else None
@@ -411,22 +409,16 @@ class BeoPlay(MediaPlayerEntity):
     @property
     def media_track(self):
         """Track number of current playing media (Music track only)."""
-        if self._source == "AirPlay":
-            return None
         return self._media_track if self._media_track else None
 
     @property
     def media_artist(self):
         """Artist of current playing media (Music track only)."""
-        if self._source == "AirPlay":
-            return None
         return self._media_artist if self._media_artist else None
 
     @property
     def media_album(self):
         """Album of current playing media (Music track only)."""
-        if self._source == "AirPlay":
-            return None
         return self._media_album if self._media_album else None
 
     @property
