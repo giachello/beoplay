@@ -4,6 +4,13 @@
             "no_devices_found": "No devices found on the network",
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "connection_error": "Failed to connect",
+            "snmp_error": "SNMP server turned off or printer not supported.",
+            "wrong_host": "Invalid hostname or IP address."
+        },
+        "flow_title": "BeoPlay Device: {model} {serial_number}",
         "step": {
             "user": {
                 "data": {
