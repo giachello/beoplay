@@ -92,9 +92,10 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle zeroconf discovery."""
+        _LOGGER.debug("Async_Step_Zeroconf start")
         if discovery_info is None:
             return self.async_abort(reason="cannot_connect")
-        _LOGGER.debug("Async Step Zeroconf Config Flow called")
+        _LOGGER.debug("Async_Step_Zeroconf discovery info %s" % discovery_info)
 
         if not discovery_info.get("name") or not discovery_info["name"].startswith(
             "Beo"
@@ -103,6 +104,7 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Hostname is format: brother.local.
         self.host = discovery_info["hostname"].rstrip(".")
+        _LOGGER.debug("Async_Step_Zeroconf Hostname %s" % self.host)
 
         self.beoplayapi = beoplay.BeoPlay(self.host)
         try:
@@ -116,10 +118,19 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         # Check if already configured
+        _LOGGER.debug(
+            "Async_Step_Zeroconf Set unique Id %s" % self.beoplayapi._serialNumber
+        )
+
         await self.async_set_unique_id(self.beoplayapi._serialNumber)
+
+        for elem in self._async_current_entries():
+            _LOGGER.debug("Async_Step_Zeroconf current entries: %s" % elem.unique_id)
+
         self._abort_if_unique_id_configured()
         _LOGGER.debug(
-            "Async Step Zeroconf set unique ID: %s" % self.beoplayapi._serialNumber
+            "Async_Step_Zeroconf not already confgured ID: %s"
+            % self.beoplayapi._serialNumber
         )
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
@@ -139,6 +150,9 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _serialNumber = self.beoplayapi._serialNumber
         _typeNumber = self.beoplayapi._typeNumber
         _name = self.beoplayapi._name
+        _LOGGER.debug("zeroconf_confirm: %s" % _name)
+        _LOGGER.debug("zeroconf_confirm: %s" % user_input)
+
         if user_input is not None:
             title = f"{_name}"
             # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
@@ -147,7 +161,7 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data={CONF_HOST: self.host, CONF_TYPE: user_input[CONF_TYPE]},
             )
 
-        _LOGGER.debug("Calling zeroconf_confirm: %s" % self.beoplayapi._name)
+        _LOGGER.debug("zeroconf_confirm calling show form: %s" % _name)
 
         return self.async_show_form(
             step_id="zeroconf_confirm",
