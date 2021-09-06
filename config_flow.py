@@ -5,7 +5,7 @@ import ipaddress
 import re
 import logging
 
-from homeassistant import config_entries, exceptions
+from homeassistant import config_entries, exceptions, data_entry_flow
 from homeassistant.helpers import config_entry_flow
 from homeassistant.const import CONF_HOST, CONF_TYPE
 
@@ -118,20 +118,20 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
 
         # Check if already configured
-        _LOGGER.debug(
-            "Async_Step_Zeroconf Set unique Id %s" % self.beoplayapi._serialNumber
-        )
+        sn = self.beoplayapi._serialNumber
+        _LOGGER.debug("Async_Step_Zeroconf Set unique Id %s" % sn)
 
-        await self.async_set_unique_id(self.beoplayapi._serialNumber)
+        if sn is not None:
+            await self.async_set_unique_id(sn)
+            for elem in self._async_current_entries():
+                _LOGGER.debug(
+                    "Async_Step_Zeroconf current entries: %s" % elem.unique_id
+                )
+            self._abort_if_unique_id_configured()
+        if sn is None:
+            raise data_entry_flow.AbortFlow("no_serial_number")
 
-        for elem in self._async_current_entries():
-            _LOGGER.debug("Async_Step_Zeroconf current entries: %s" % elem.unique_id)
-
-        self._abort_if_unique_id_configured()
-        _LOGGER.debug(
-            "Async_Step_Zeroconf not already confgured ID: %s"
-            % self.beoplayapi._serialNumber
-        )
+        _LOGGER.debug("Async_Step_Zeroconf awaiting confirmation: %s" % sn)
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
