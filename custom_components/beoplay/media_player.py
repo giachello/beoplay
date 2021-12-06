@@ -6,20 +6,27 @@ from asyncio import CancelledError
 import logging
 from datetime import timedelta
 
-import aiohttp
+# import aiohttp
 from aiohttp.client_exceptions import ClientError
-from aiohttp.hdrs import CONNECTION, KEEP_ALIVE
-import async_timeout
+
+# from aiohttp.hdrs import CONNECTION, KEEP_ALIVE
+# import async_timeout
 import voluptuous as vol
 
 import json
 
 import pybeoplay as beoplay
 
+from .const import (
+    DOMAIN,
+    BEOPLAY_NOTIFICATION,
+)
+
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
-from homeassistant.components.media_player import MediaPlayerEntity, PLATFORM_SCHEMA
+from homeassistant.helpers.typing import HomeAssistantType, ServiceDataType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     DOMAIN,
     MEDIA_TYPE_MUSIC,
@@ -38,21 +45,21 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
-    CONF_NAME,
-    CONF_API_VERSION,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_UNKNOWN,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.script import Script
+
+# from homeassistant.helpers.script import Script
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_track_time_interval
+
+# from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ["pybeoplay"]
@@ -79,15 +86,6 @@ SUPPORT_BEOPLAY = (
     | SUPPORT_SELECT_SOURCE
 )
 
-# DEFAULT_DEVICE = 'default'
-# DEFAULT_HOST = '127.0.0.1'
-# DEFAULT_NAME = 'BeoPlay'
-
-# PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-#     vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-#     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-# })
-
 DATA_BEOPLAY = "beoplay_media_player"
 
 BEOPLAY_EXPERIENCE_JOIN_SERVICE = "beoplay_join_experience"
@@ -95,11 +93,9 @@ BEOPLAY_EXPERIENCE_LEAVE_SERVICE = "beoplay_leave_experience"
 
 EXPERIENCE_SCHEMA = vol.Schema(
     {
-        vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     }
 )
-
-__hass: HomeAssistantType
 
 
 class BeoPlayData:
@@ -137,34 +133,6 @@ def _add_player(hass, async_add_devices, host):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _start_polling)
 
 
-def join_experience(service: ServiceDataType):
-    """Join to an existing experience"""
-    _LOGGER.debug("Join experience service called")
-
-    entity_ids = service.data.get("entity_id")
-    entities = __hass.data[DATA_BEOPLAY].entities
-
-    if entity_ids:
-        entities = [e for e in entities if e.entity_id in entity_ids]
-
-    for entity in entities:
-        entity.join_experience()
-
-
-def leave_experience(service: ServiceDataType):
-    """Leave an existing experience"""
-    _LOGGER.debug("Leave experience service called")
-
-    entity_ids = service.data.get("entity_id")
-    entities = __hass.data[DATA_BEOPLAY].entities
-
-    if entity_ids:
-        entities = [e for e in entities if e.entity_id in entity_ids]
-
-    for entity in entities:
-        entity.leave_experience()
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -175,12 +143,32 @@ async def async_setup_entry(
     # config = hass.data[DOMAIN][config_entry.entry_id]
     # session = async_get_clientsession(hass)
 
+    def join_experience(service: ServiceDataType):
+        """Join to an existing experience"""
+        _LOGGER.debug("Join experience service called")
+        entity_ids = service.data.get("entity_id")
+        entities = hass.data[DATA_BEOPLAY].entities
+
+        if entity_ids:
+            entities = [e for e in entities if e.entity_id in entity_ids]
+        for entity in entities:
+            entity.join_experience()
+
+    def leave_experience(service: ServiceDataType):
+        """Leave an existing experience"""
+        _LOGGER.debug("Leave experience service called")
+        entity_ids = service.data.get("entity_id")
+        entities = hass.data[DATA_BEOPLAY].entities
+
+        if entity_ids:
+            entities = [e for e in entities if e.entity_id in entity_ids]
+        for entity in entities:
+            entity.leave_experience()
+
     host = config_entry.data[CONF_HOST]
 
     if DATA_BEOPLAY not in hass.data:
         hass.data[DATA_BEOPLAY] = BeoPlayData()
-
-    __hass = hass
 
     hass.services.async_register(
         DOMAIN,
@@ -200,6 +188,28 @@ async def async_setup_entry(
 
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the BeoPlay platform."""
+
+    def join_experience(service: ServiceDataType):
+        """Join to an existing experience"""
+        _LOGGER.debug("Join experience service called")
+        entity_ids = service.data.get("entity_id")
+        entities = hass.data[DATA_BEOPLAY].entities
+
+        if entity_ids:
+            entities = [e for e in entities if e.entity_id in entity_ids]
+        for entity in entities:
+            entity.join_experience()
+
+    def leave_experience(service: ServiceDataType):
+        """Leave an existing experience"""
+        _LOGGER.debug("Leave experience service called")
+        entity_ids = service.data.get("entity_id")
+        entities = hass.data[DATA_BEOPLAY].entities
+
+        if entity_ids:
+            entities = [e for e in entities if e.entity_id in entity_ids]
+        for entity in entities:
+            entity.leave_experience()
 
     host = config.get(CONF_HOST)
 
@@ -226,10 +236,10 @@ class BeoPlay(MediaPlayerEntity):
     """Representation of a BeoPlay speaker"""
 
     def __init__(self, hass, speaker):
-        self._hass = hass
+        self._hass: HomeAssistant = hass
         self._polling_session = async_get_clientsession(hass)
         self._polling_task = None  # The actual polling task.
-        self._firstRun = True
+        self._first_run = True
 
         self._speaker = speaker
         self._state = self._speaker.state
@@ -244,10 +254,11 @@ class BeoPlay(MediaPlayerEntity):
         self._media_track = self._speaker.media_track
         self._media_artist = self._speaker.media_artist
         self._connfail = 0
-        self._serialNumber = ""
+        self._serial_number = ""
         self._name = ""
         self._model = ""
         self._on = self._speaker.on
+        self._unique_id = ""
 
     async def async_added_to_hass(self):
         self.hass.data[DATA_BEOPLAY].entities.append(self)
@@ -319,8 +330,10 @@ class BeoPlay(MediaPlayerEntity):
                         self._media_track = self._speaker.media_track
                         self._media_artist = self._speaker.media_artist
 
-                self.async_schedule_update_ha_state()
-
+                        self.async_schedule_update_ha_state()
+                        self._hass.add_job(
+                            self._notify_beoplay_notification, data_json["notification"]
+                        )
             else:
                 _LOGGER.error(
                     "Error %s on %s. Trying one more time",
@@ -333,12 +346,32 @@ class BeoPlay(MediaPlayerEntity):
             _LOGGER.info("Client connection error, marking %s as offline", self._name)
             raise
 
+    # ========== Events ==============
+
+    @callback
+    def _notify_beoplay_notification(self, telegram):
+        """Notify hass when an incoming ML message is received."""
+        self._hass.bus.async_fire(BEOPLAY_NOTIFICATION, telegram)
+
     # ========== Properties ==========
 
     @property
     def name(self):
         """Return the device name."""
         return self._name
+
+    @property
+    def unique_id(self):
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        return DeviceInfo(
+            name=self._name,
+            manufacturer="Bang & Olufsen",
+            via_device=(DOMAIN, self._serial_number),
+            model=self._model,
+        )
 
     @property
     def should_poll(self):
@@ -354,17 +387,20 @@ class BeoPlay(MediaPlayerEntity):
     @property
     def state(self):
         """Get the device state."""
-        if self._on == False:
+        if not self._on:
             return STATE_OFF
         if self._state is None:
             return None
         else:
-            if self._state == "play":
+            if self._state == "play" or self._state == "playing":
                 return STATE_PLAYING
             if self._state == "pause":
                 return STATE_PAUSED
             if self._state == "stop":
                 return STATE_PAUSED
+        if self._on:
+            return STATE_ON
+        return STATE_UNKNOWN
 
     @property
     def source(self):
@@ -488,16 +524,18 @@ class BeoPlay(MediaPlayerEntity):
         self._speaker.getStandby()
         if self._on != self._speaker.on:
             self._on = self._speaker.on
-            # _LOGGER.debug("Updating ON state: %s", self._on)
-        if self._firstRun:
+            _LOGGER.debug("Updating ON state: %s", self._on)
+        if self._first_run:
             self._speaker.getSources()
             self._sources = self._speaker.sources
             ## get the information about the device
-            r = self._speaker._getReq("BeoDevice")
-            if r:
-                self._serialNumber = r["beoDevice"]["productId"]["serialNumber"]
-                self._name = r["beoDevice"]["productFriendlyName"][
+            _r = self._speaker._getReq("BeoDevice")
+            if _r:
+                self._serial_number = _r["beoDevice"]["productId"]["serialNumber"]
+                self._name = _r["beoDevice"]["productFriendlyName"][
                     "productFriendlyName"
                 ]
-                self._model = r["beoDevice"]["productId"]["typeNumber"]
-            self._firstRun = False
+                self._model = _r["beoDevice"]["productId"]["typeNumber"]
+                self._unique_id = f"beoplay-{self._serial_number}-media_player"
+
+            self._first_run = False
