@@ -324,6 +324,7 @@ class BeoPlay(MediaPlayerEntity):
                         self._volume = self._speaker.volume
                         self._muted = self._speaker.muted
                         self._state = self._speaker.state
+                        self._on = self._speaker.on
                         self._source = self._speaker.source
                         self._media_url = self._speaker.media_url
                         self._media_album = self._speaker.media_album

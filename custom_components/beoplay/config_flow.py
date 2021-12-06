@@ -72,12 +72,12 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 self.beoplayapi = beoplay.BeoPlay(user_input[CONF_HOST])
 
-                #                await self.async_set_unique_id(beoplayapi.serial.lower())
-                #                self._abort_if_unique_id_configured()
-
-                #                title = f"{brother.model} {brother.serial}"
                 await self.hass.async_add_executor_job(self.beoplayapi.getDeviceInfo)
                 title = f"{self.beoplayapi._name}"
+
+                await self.async_set_unique_id(self.beoplayapi._serialNumber)
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(title=title, data=user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
