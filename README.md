@@ -4,7 +4,7 @@ This component enables integration of B&O Audio/Video equipment with Home Assist
 
 ## Installation
 
-Installation for the moment is in the custom_components. Just copy the full contents of this repository (except for the README and PNG files) into the config/custom_components/beoplay folder in your Home Assistant system (You'll need to create the beoplay folder. If you are installing over a previous version, delete all the contents and start fresh). Then, restart Home Assistant.
+Installation for the moment is through custom_components. Just copy the full contents of the `custom_components/beoplay` folder into the `config/custom_components/beoplay` folder in your Home Assistant system (You'll need to create the beoplay folder. If you are installing over a previous version, delete all the contents and start fresh). Then, restart Home Assistant.
 
 Configuration is very simple, go to Configuration -> Integrations -> Add Integration (bottom right corner), search for BeoPlay and insert the host name or IP.
 
