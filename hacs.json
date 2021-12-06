@@ -1,0 +1,6 @@
+{
+  "name": "BeoPlay",
+  "country": "US",
+  "domains": ["media_player"],
+  "render_readme" : true
+}
