@@ -48,6 +48,6 @@ These are called through service calls, e.g.:
 
 ## Events
 
-Beoplay also generates events (`beoplay_notification`) where you can track status changes of the speaker and also button presses on the remote control. You can use this to enable all kinds of cool experiences (e.g., catch buttons like `LIGHT` to control automations on the Home Assistant)
+Beoplay also generates events (`beoplay_notification`) where you can track status changes of the speaker. You can use this to enable all kinds of cool experiences (e.g., catch buttons like `A.MEM` to control automations on the Home Assistant like starting a streaming player)
 
 <img width="739" alt="image" src="https://user-images.githubusercontent.com/60585229/145608754-8107acb5-fb85-447a-87bd-3f3804e5e3ed.png">
