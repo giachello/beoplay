@@ -38,3 +38,16 @@ beoplay_leave_experience:
       description: "A media player Entity ID."
       example: "media_player.my_chromecast"
 ```
+
+You can use them to have the speaker join and leave an existing play experience, just like pressing the 'Join' button on the remote. A source must be playing already for Join to work.
+
+These are called through service calls, e.g.:
+
+![image](https://user-images.githubusercontent.com/60585229/145609296-2080a73b-001b-4be8-8eec-27787f49be08.png)
+
+
+## Events
+
+Beoplay also generates events (`beoplay_notification`) where you can track status changes of the speaker and also button presses on the remote control. You can use this to enable all kinds of cool experiences (e.g., catch buttons like `LIGHT` to control automations on the Home Assistant)
+
+<img width="739" alt="image" src="https://user-images.githubusercontent.com/60585229/145608754-8107acb5-fb85-447a-87bd-3f3804e5e3ed.png">
