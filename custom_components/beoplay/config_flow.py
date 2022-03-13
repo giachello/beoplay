@@ -97,13 +97,13 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         _LOGGER.debug("Async_Step_Zeroconf discovery info %s" % discovery_info)
 
-        if not discovery_info.get("name") or not discovery_info["name"].startswith(
+        if not discovery_info.name or not discovery_info.name.startswith(
             "Beo"
         ):
             return self.async_abort(reason="not_beoplay_device")
 
         # Hostname is format: brother.local.
-        self.host = discovery_info["hostname"].rstrip(".")
+        self.host = discovery_info.hostname.rstrip(".")
         _LOGGER.debug("Async_Step_Zeroconf Hostname %s" % self.host)
 
         self.beoplayapi = beoplay.BeoPlay(self.host)
