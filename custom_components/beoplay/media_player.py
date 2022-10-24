@@ -24,8 +24,8 @@ from .const import (
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType, ServiceDataType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.typing import ServiceDataType
+from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import (
     DOMAIN,
@@ -96,6 +96,8 @@ EXPERIENCE_SCHEMA = vol.Schema(
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     }
 )
+
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
 class BeoPlayData:
@@ -538,5 +540,5 @@ class BeoPlay(MediaPlayerEntity):
                 ]
                 self._model = _r["beoDevice"]["productId"]["typeNumber"]
                 self._unique_id = f"beoplay-{self._serial_number}-media_player"
-
+            self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, self._serial_number, hass=self._hass)
             self._first_run = False
