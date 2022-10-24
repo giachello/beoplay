@@ -4,6 +4,7 @@
   "version": "2021.12.1",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/beoplay",
+  "issue_tracker": "https://github.com/giachello/beoplay/issues",
   "requirements": [
     "pybeoplay==0.1.1"
   ],
