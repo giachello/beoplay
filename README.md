@@ -10,9 +10,8 @@ Configuration is very simple, go to Configuration -> Integrations -> Add Integra
 
 It should work with both TVs, Speakers and other devices like NL/ML converters.
 
-The component also works with Zeroconf, so Home Assistant should automaticlly show up in your discovery panel (Configuration->Integrations)
+The component also works with Zeroconf, so B&amp;O devices should automaticlly show up in your discovery panel (Configuration->Integrations)
 
-Currently this is heavily under development so YMMV
 
 It should show up as something like this:
 
