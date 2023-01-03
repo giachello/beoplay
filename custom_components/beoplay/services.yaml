@@ -10,3 +10,12 @@ beoplay_leave_experience:
     entity_id:
       description: "A media player Entity ID."
       example: "media_player.my_chromecast"
+beoplay_add_media_to_queue:
+  description: "Add to the Queue."
+  fields:
+    entity_id:
+      description: "A media player Entity ID."
+      example: "media_player.my_chromecast"
+    url:
+      description: "A URL to add to the playback queue. Must be reachable from the speaker."
+      example: "http://192.168.1.1/DLNAfile.mp3"

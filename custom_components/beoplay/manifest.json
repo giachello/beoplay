@@ -1,12 +1,12 @@
 {
   "domain": "beoplay",
   "name": "BeoPlay for Bang & Olufsen",
-  "version": "2021.12.1",
+  "version": "2023.1.1",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/beoplay",
   "issue_tracker": "https://github.com/giachello/beoplay/issues",
   "requirements": [
-    "pybeoplay==0.1.1"
+    "pybeoplay==1.0.5"
   ],
   "ssdp": [],
   "zeroconf": ["_beoremote._tcp.local."],
