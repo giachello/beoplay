@@ -540,7 +540,7 @@ class BeoPlay(MediaPlayerEntity):
             self._item_number = self._speaker.itemNumber
             self._unique_id = f"beoplay-{self._serial_number}-media_player"
             self.entity_id = generate_entity_id(
-                ENTITY_ID_FORMAT, self._serial_number, hass=self._hass
+                ENTITY_ID_FORMAT, self._name, hass=self._hass
             )
             await self._speaker.async_get_sources()
             self._first_run = False
