@@ -122,7 +122,7 @@ async def _add_player(hass, async_add_devices, host):
         speaker.start_polling()
 
     @callback
-    def _stop_polling():
+    def _stop_polling(event=None):
         """Stop polling."""
         speaker.stop_polling()
 
