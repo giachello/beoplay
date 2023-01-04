@@ -4,14 +4,15 @@ import pybeoplay as beoplay
 import ipaddress
 import re
 import logging
-
-from homeassistant import config_entries, exceptions, data_entry_flow
-from homeassistant.helpers import config_entry_flow
-from homeassistant.const import CONF_HOST, CONF_TYPE
-
+from aiohttp import ClientError
 import voluptuous as vol
 
-from .const import DOMAIN, BEOPLAY_TYPES
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant import config_entries, exceptions
+from homeassistant.const import CONF_HOST
+from homeassistant.data_entry_flow import AbortFlow
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=""): str,
-        vol.Optional(CONF_TYPE, default="TV"): vol.In(BEOPLAY_TYPES),
+        #        vol.Optional(CONF_TYPE, default="TV"): vol.In(BEOPLAY_TYPES),
     }
 )
 
@@ -32,21 +33,6 @@ def host_valid(host):
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
         return all(x and not disallowed.search(x) for x in host.split("."))
-
-
-# async def _async_has_devices(hass) -> bool:
-#     """Return if there are devices that can be discovered."""
-#     # TODO Check if there are any devices that can be discovered in the network.
-#     devices = await hass.async_add_executor_job(my_pypi_dependency.discover)
-#     return len(devices) > 0
-
-
-# config_entry_flow.register_discovery_flow(
-#     DOMAIN,
-#     "BeoPlay for Bang & Olufsen",
-#     _async_has_devices,
-#     config_entries.CONN_CLASS_UNKNOWN,
-# )
 
 
 class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -70,21 +56,23 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not host_valid(user_input[CONF_HOST]):
                     raise InvalidHost()
 
-                self.beoplayapi = beoplay.BeoPlay(user_input[CONF_HOST])
+                self.beoplayapi = beoplay.BeoPlay(
+                    user_input[CONF_HOST], async_get_clientsession(self.hass)
+                )
 
-                await self.hass.async_add_executor_job(self.beoplayapi.getDeviceInfo)
-                title = f"{self.beoplayapi._name}"
+                await self.beoplayapi.async_get_device_info()
+                title = f"{self.beoplayapi.name}"
 
-                await self.async_set_unique_id(self.beoplayapi._serialNumber)
+                await self.async_set_unique_id(self.beoplayapi.serialNumber)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(title=title, data=user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
-            except ConnectionError:
+            except (ConnectionError, ConnectionRefusedError, ClientError):
                 errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.warning("Other error connecting with Beoplay device")
+            except AbortFlow:
+                return self.async_abort(reason="single_instance_allowed")
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -95,48 +83,62 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Async_Step_Zeroconf start")
         if discovery_info is None:
             return self.async_abort(reason="cannot_connect")
-        _LOGGER.debug("Async_Step_Zeroconf discovery info %s" % discovery_info)
+        _LOGGER.debug("Async_Step_Zeroconf discovery info %s ", discovery_info)
 
-        if not discovery_info.name or not (discovery_info.name.startswith("Beo") or discovery_info.name.startswith("BLC")):
+        # Check if BeoVision and BeoSound speakers, or BLC device (NL/ML Converter).
+        # not sure this is actually necessary, since we already check
+        # for _beoremote zeroconf type.
+        if not discovery_info.name or not (
+            discovery_info.name.startswith("Beo")
+            or discovery_info.name.startswith("BLC")
+        ):
             return self.async_abort(reason="not_beoplay_device")
 
-        # Hostname is format: brother.local.
+        # Hostname is format: BLC-xxxxx.local.
         self.host = discovery_info.hostname.rstrip(".")
-        _LOGGER.debug("Async_Step_Zeroconf Hostname %s" % self.host)
+        _LOGGER.debug("Async_Step_Zeroconf Hostname %s", self.host)
 
-        self.beoplayapi = beoplay.BeoPlay(self.host)
+        self.beoplayapi = beoplay.BeoPlay(self.host, async_get_clientsession(self.hass))
         try:
-            await self.hass.async_add_executor_job(self.beoplayapi.getDeviceInfo)
-        except Exception as e:
-            _LOGGER.debug("Exception %s" % str(e))
+            await self.beoplayapi.async_get_device_info()
+        except ClientError:
             _LOGGER.debug(
-                "Could not connect with %s as %s"
-                % (self.beoplayapi._name, str(self.host))
+                "Could not connect with %s as %s",
+                self.beoplayapi.name,
+                str(self.host),
+            )
+            return self.async_abort(reason="cannot_connect")
+        except TimeoutError:
+            _LOGGER.debug(
+                "Timeout connecting with %s as %s",
+                self.beoplayapi.name,
+                str(self.host),
             )
             return self.async_abort(reason="cannot_connect")
 
         # Check if already configured
-        sn = self.beoplayapi._serialNumber
-        _LOGGER.debug("Async_Step_Zeroconf Set unique Id %s" % sn)
+        sn = self.beoplayapi.serialNumber
+        _LOGGER.debug("Async_Step_Zeroconf Set unique Id %s", sn)
 
-        if sn is not None:
-            await self.async_set_unique_id(sn)
-            for elem in self._async_current_entries():
-                _LOGGER.debug(
-                    "Async_Step_Zeroconf current entries: %s" % elem.unique_id
-                )
-            self._abort_if_unique_id_configured()
+        try:
+            if sn is not None:
+                await self.async_set_unique_id(sn)
+                for elem in self._async_current_entries():
+                    _LOGGER.debug(
+                        "Async_Step_Zeroconf current entries: %s", elem.unique_id
+                    )
+                self._abort_if_unique_id_configured()
+        except AbortFlow:
+            return self.async_abort(reason="single_instance_allowed")
         if sn is None:
-            raise data_entry_flow.AbortFlow("no_serial_number")
-
-        _LOGGER.debug("Async_Step_Zeroconf awaiting confirmation: %s" % sn)
+            return self.async_abort(reason="no_serial_number")
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
                 "title_placeholders": {
-                    "serial_number": self.beoplayapi._serialNumber,
-                    "model": self.beoplayapi._name,
+                    "serial_number": self.beoplayapi.serialNumber,
+                    "model": self.beoplayapi.name,
                 }
             }
         )
@@ -145,30 +147,32 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf_confirm(self, user_input=None):
         """Handle a flow initiated by zeroconf."""
 
-        _serialNumber = self.beoplayapi._serialNumber
-        _typeNumber = self.beoplayapi._typeNumber
-        _name = self.beoplayapi._name
-        _LOGGER.debug("zeroconf_confirm: %s" % _name)
-        _LOGGER.debug("zeroconf_confirm: %s" % user_input)
+        _sn = self.beoplayapi.serialNumber
+        _tn = self.beoplayapi.typeNumber
+        _name = self.beoplayapi.name
+        _LOGGER.debug("zeroconf_confirm: %s", _name)
 
         if user_input is not None:
             title = f"{_name}"
             # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             return self.async_create_entry(
                 title=title,
-                data={CONF_HOST: self.host, CONF_TYPE: user_input[CONF_TYPE]},
+                data={
+                    CONF_HOST: self.host,
+                    #                CONF_TYPE: user_input[CONF_TYPE]
+                },
             )
 
-        _LOGGER.debug("zeroconf_confirm calling show form: %s" % _name)
+        _LOGGER.debug("zeroconf_confirm calling show form: %s", _name)
 
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_TYPE, default="Speaker"): vol.In(BEOPLAY_TYPES)}
-            ),
+            #            data_schema=vol.Schema(
+            #                {vol.Optional(CONF_TYPE, default="Speaker"): vol.In(BEOPLAY_TYPES)}
+            #            ),
             description_placeholders={
-                "serial_number": _serialNumber,
-                "model": _typeNumber,
+                "serial_number": _sn,
+                "model": _tn,
                 "name": _name,
             },
         )

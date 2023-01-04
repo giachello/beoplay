@@ -342,7 +342,7 @@ class BeoPlay(MediaPlayerEntity):
             # occasionally the notifications stream is closed by the speaker/TV
             # In that case, restart the polling
             self.async_schedule_update_ha_state()
-            _LOGGER.info("Client error %s on %s" % (str(_e), self._name))
+            _LOGGER.info("Client error %s on %s", str(_e), self._name)
             raise
 
     # ========== Events ==============
