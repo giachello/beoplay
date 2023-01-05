@@ -50,3 +50,7 @@ These are called through service calls, e.g.:
 Beoplay also generates events (`beoplay_notification`) where you can track status changes of the speaker. You can use this to enable all kinds of cool experiences. For example, you can catch when the user activates a source like `A.MEM` to control automations on the Home Assistant. For example you could start a streaming player that is connected with your B&O equipment. I use it to track when the TV turns on, to select a certain source, and adjust the lights in the room to create a better ambiance.
 
 <img width="739" alt="image" src="https://user-images.githubusercontent.com/60585229/145608754-8107acb5-fb85-447a-87bd-3f3804e5e3ed.png">
+
+## Troubleshoot
+* If you can't initialize a TV, try setting 'wake on LAN' or 'wake on WIFI' to on, depending on how your TV is connected to the network. 
+* Also, Home Assistant and the TV/Speaker must be on the same local network, i.e. they need to be able to communicate to one another.
