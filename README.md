@@ -3,7 +3,7 @@
 This component enables integration of B&O Audio/Video equipment with Home Assistant and specifically TVs, Speakers and units like the BeoLink Converter ML/NL. 
 
 ## Installation via HACS
-The preferred type of installation is via HACS. In this way, you'll get updates when there are new versions.
+The preferred type of installation is via [HACS](https://hacs.xyz). In this way, you'll get updates when there are new versions.
 
 ### Manual Installation
 
@@ -28,19 +28,17 @@ It also exposes 3 additional services:
 ```
 beoplay_join_experience:
 ```
-This command joins the speaker to the current primary experience.
+This command joins the speaker to the current play experience, just like pressing the 'Join' button on the remote. A source must be playing already for Join to work.
 
 ```
 beoplay_leave_experience:
 ```
-This command makes the speaker quit the current primary experience.
+This command makes the speaker quit the current experience, and turn off.
 
 ```
 beoplay_add_media_to_queue:
 ```
 This command is experimental. It allows to add a URL of a DLNA asset on your network to the speaker and play it. Let me know if it works for you!
-
-You can use them to have the speaker join and leave an existing play experience, just like pressing the 'Join' button on the remote. A source must be playing already for Join to work.
 
 These are called through service calls, e.g.:
 
@@ -49,6 +47,6 @@ These are called through service calls, e.g.:
 
 ## Events
 
-Beoplay also generates events (`beoplay_notification`) where you can track status changes of the speaker. You can use this to enable all kinds of cool experiences (e.g., catch buttons like `A.MEM` to control automations on the Home Assistant like starting a streaming player)
+Beoplay also generates events (`beoplay_notification`) where you can track status changes of the speaker. You can use this to enable all kinds of cool experiences. For example, you can catch when the user activates a source like `A.MEM` to control automations on the Home Assistant. For example you could start a streaming player that is connected with your B&O equipment. I use it to track when the TV turns on, to select a certain source, and adjust the lights in the room to create a better ambiance.
 
 <img width="739" alt="image" src="https://user-images.githubusercontent.com/60585229/145608754-8107acb5-fb85-447a-87bd-3f3804e5e3ed.png">
