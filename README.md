@@ -42,7 +42,7 @@ This command is experimental. It allows to add a URL of a DLNA asset on your net
 
 These are called through service calls, e.g.:
 
-![image](https://user-images.githubusercontent.com/60585229/145609296-2080a73b-001b-4be8-8eec-27787f49be08.png)
+![image](https://user-images.githubusercontent.com/60585229/211130163-81149354-1f41-4ae1-bbd3-1b91bfdcb812.png)
 
 
 ## Events
