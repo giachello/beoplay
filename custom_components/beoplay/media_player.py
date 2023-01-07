@@ -334,6 +334,9 @@ class BeoPlay(MediaPlayerEntity):
             self._on = self._speaker.on
             self._state = self._speaker.state
             self.async_schedule_update_ha_state()
+            # add the entity ID of the speaker to the notification so we know 
+            # where it's coming from
+            data["entity_id"] = self.entity_id
             self._hass.add_job(self._notify_beoplay_notification, data)
 
         try:
@@ -532,18 +535,21 @@ class BeoPlay(MediaPlayerEntity):
         # _LOGGER.debug("Updating")
 
         if self._first_run:
-            await self._speaker.async_get_device_info()
-            #            self._sources = self._speaker.sources
-            self._serial_number = self._speaker.serialNumber
-            self._name = self._speaker.name
-            self._type_number = self._speaker.typeNumber
-            self._item_number = self._speaker.itemNumber
-            self._unique_id = f"beoplay-{self._serial_number}-media_player"
-            self.entity_id = generate_entity_id(
-                ENTITY_ID_FORMAT, self._name, hass=self._hass
-            )
-            await self._speaker.async_get_sources()
-            self._first_run = False
+            try:
+                await self._speaker.async_get_device_info()
+                self._serial_number = self._speaker.serialNumber
+                self._name = self._speaker.name
+                self._type_number = self._speaker.typeNumber
+                self._item_number = self._speaker.itemNumber
+                self._unique_id = f"beoplay-{self._serial_number}-media_player"
+                self.entity_id = generate_entity_id(
+                    ENTITY_ID_FORMAT, self._name, hass=self._hass
+                )
+                await self._speaker.async_get_sources()
+                self._first_run = False
+            except ClientError:
+                _LOGGER.debug("Couldn't connect with %s (maybe Wake-On-Lan / Quickstart is disabled?)", self._speaker._host)
+                return
         try:
             await self._speaker.async_get_standby()
             if self._on != self._speaker.on:
