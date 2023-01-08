@@ -7,9 +7,7 @@ import voluptuous as vol
 
 import asyncio
 from asyncio import CancelledError
-from aiohttp import ServerDisconnectedError
-from aiohttp.client_exceptions import ClientError
-
+from aiohttp import ServerDisconnectedError, ClientConnectorError, ClientError
 
 import pybeoplay
 
@@ -116,6 +114,42 @@ class BeoPlayData:
 async def _add_player(hass, async_add_devices, host):
     """Add speakers."""
 
+    # the callbacks for the services
+    def join_experience(service: ServiceDataType):
+        """Join to an existing experience"""
+        _LOGGER.debug("Join experience service called")
+        entity_ids = service.data.get("entity_id")
+        entities = hass.data[DATA_BEOPLAY].entities
+
+        if entity_ids:
+            entities = [e for e in entities if e.entity_id in entity_ids]
+        for entity in entities:
+            entity.join_experience()
+
+    def leave_experience(service: ServiceDataType):
+        """Leave an existing experience"""
+        _LOGGER.debug("Leave experience service called")
+        entity_ids = service.data.get("entity_id")
+        entities = hass.data[DATA_BEOPLAY].entities
+
+        if entity_ids:
+            entities = [e for e in entities if e.entity_id in entity_ids]
+        for entity in entities:
+            entity.leave_experience()
+
+    def add_media(service: ServiceDataType):
+        """Leave an existing experience"""
+        _LOGGER.debug("Add Media to Queue service called")
+        entity_ids = service.data.get("entity_id")
+        url = service.data.get("url")
+        entities = hass.data[DATA_BEOPLAY].entities
+
+        if entity_ids:
+            entities = [e for e in entities if e.entity_id in entity_ids]
+        for entity in entities:
+            entity.add_media(url)
+
+    # the callbacks for starting / stopping the polling (Notifications) task
     @callback
     def _start_polling(event=None):
         """Start polling."""
@@ -125,6 +159,26 @@ async def _add_player(hass, async_add_devices, host):
     def _stop_polling(event=None):
         """Stop polling."""
         speaker.stop_polling()
+
+    # Register the service callbacks
+    hass.services.async_register(
+        DOMAIN,
+        BEOPLAY_EXPERIENCE_JOIN_SERVICE,
+        join_experience,
+        schema=EXPERIENCE_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        BEOPLAY_EXPERIENCE_LEAVE_SERVICE,
+        leave_experience,
+        schema=EXPERIENCE_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        BEOPLAY_ADD_MEDIA_SERVICE,
+        add_media,
+        schema=ADD_MEDIA_SCHEMA,
+    )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
 
@@ -147,130 +201,22 @@ async def async_setup_entry(
     async_add_entities,
 ):
     """Setup sensors from a config entry created in the integrations UI."""
-    # this is only needed if there is a global API object but we don't have one. we have individual api objects for each device.
-    # config = hass.data[DOMAIN][config_entry.entry_id]
-    # session = async_get_clientsession(hass)
-
-    def join_experience(service: ServiceDataType):
-        """Join to an existing experience"""
-        _LOGGER.debug("Join experience service called")
-        entity_ids = service.data.get("entity_id")
-        entities = hass.data[DATA_BEOPLAY].entities
-
-        if entity_ids:
-            entities = [e for e in entities if e.entity_id in entity_ids]
-        for entity in entities:
-            entity.join_experience()
-
-    def leave_experience(service: ServiceDataType):
-        """Leave an existing experience"""
-        _LOGGER.debug("Leave experience service called")
-        entity_ids = service.data.get("entity_id")
-        entities = hass.data[DATA_BEOPLAY].entities
-
-        if entity_ids:
-            entities = [e for e in entities if e.entity_id in entity_ids]
-        for entity in entities:
-            entity.leave_experience()
-
-    def add_media(service: ServiceDataType):
-        """Leave an existing experience"""
-        _LOGGER.debug("Add Media to Queue service called")
-        entity_ids = service.data.get("entity_id")
-        url = service.data.get("url")
-        entities = hass.data[DATA_BEOPLAY].entities
-
-        if entity_ids:
-            entities = [e for e in entities if e.entity_id in entity_ids]
-        for entity in entities:
-            entity.add_media(url)
 
     host = config_entry.data[CONF_HOST]
 
     if DATA_BEOPLAY not in hass.data:
         hass.data[DATA_BEOPLAY] = BeoPlayData()
 
-    hass.services.async_register(
-        DOMAIN,
-        BEOPLAY_EXPERIENCE_JOIN_SERVICE,
-        join_experience,
-        schema=EXPERIENCE_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        BEOPLAY_EXPERIENCE_LEAVE_SERVICE,
-        leave_experience,
-        schema=EXPERIENCE_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        BEOPLAY_ADD_MEDIA_SERVICE,
-        add_media,
-        schema=ADD_MEDIA_SCHEMA,
-    )
     await _add_player(hass, async_add_entities, host)
 
 
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the BeoPlay platform."""
-
-    def join_experience(service: ServiceDataType):
-        """Join to an existing experience"""
-        _LOGGER.debug("Join experience service called")
-        entity_ids = service.data.get("entity_id")
-        entities = hass.data[DATA_BEOPLAY].entities
-
-        if entity_ids:
-            entities = [e for e in entities if e.entity_id in entity_ids]
-        for entity in entities:
-            entity.join_experience()
-
-    def leave_experience(service: ServiceDataType):
-        """Leave an existing experience"""
-        _LOGGER.debug("Leave experience service called")
-        entity_ids = service.data.get("entity_id")
-        entities = hass.data[DATA_BEOPLAY].entities
-
-        if entity_ids:
-            entities = [e for e in entities if e.entity_id in entity_ids]
-        for entity in entities:
-            entity.leave_experience()
-
-    def add_media(service: ServiceDataType):
-        """Leave an existing experience"""
-        _LOGGER.debug("Add Media to Queue service called")
-        entity_ids = service.data.get("entity_id")
-        url = service.data.get("url")
-        entities = hass.data[DATA_BEOPLAY].entities
-
-        if entity_ids:
-            entities = [e for e in entities if e.entity_id in entity_ids]
-        for entity in entities:
-            entity.add_media(url)
+    """Set up the BeoPlay platform from a manual configuration.yaml."""
 
     host = config.get(CONF_HOST)
 
     if DATA_BEOPLAY not in hass.data:
         hass.data[DATA_BEOPLAY] = BeoPlayData()
-
-    hass.services.async_register(
-        DOMAIN,
-        BEOPLAY_EXPERIENCE_JOIN_SERVICE,
-        join_experience,
-        schema=EXPERIENCE_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        BEOPLAY_EXPERIENCE_LEAVE_SERVICE,
-        leave_experience,
-        schema=EXPERIENCE_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        BEOPLAY_ADD_MEDIA_SERVICE,
-        add_media,
-        schema=ADD_MEDIA_SCHEMA,
-    )
 
     await _add_player(hass, async_add_devices, host)
 
@@ -334,7 +280,7 @@ class BeoPlay(MediaPlayerEntity):
             self._on = self._speaker.on
             self._state = self._speaker.state
             self.async_schedule_update_ha_state()
-            # add the entity ID of the speaker to the notification so we know 
+            # add the entity ID of the speaker to the notification so we know
             # where it's coming from
             data["entity_id"] = self.entity_id
             self._hass.add_job(self._notify_beoplay_notification, data)
@@ -547,13 +493,16 @@ class BeoPlay(MediaPlayerEntity):
                 )
                 await self._speaker.async_get_sources()
                 self._first_run = False
-            except ClientError:
-                _LOGGER.debug("Couldn't connect with %s (maybe Wake-On-Lan / Quickstart is disabled?)", self._speaker._host)
+            except (ClientError, ClientConnectorError):
+                _LOGGER.debug(
+                    "Couldn't connect with %s (maybe Wake-On-Lan / Quickstart is disabled?)",
+                    self._speaker._host,
+                )
                 return
         try:
             await self._speaker.async_get_standby()
             if self._on != self._speaker.on:
                 self._on = self._speaker.on
                 _LOGGER.debug("Updating ON state: %s", self._on)
-        except ServerDisconnectedError:
+        except (ServerDisconnectedError, ClientConnectorError):
             _LOGGER.debug("Server disconnected, ignoring")
