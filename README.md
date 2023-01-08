@@ -19,6 +19,9 @@ It should show up as something like this:
 
 ![beoplay_mini_media_player.png](./beoplay_mini_media_player.png)
 
+## Power Saving modes caveats (WOL, Quickstart)
+If your TV or speaker is in power saving mode (Wake on Lan off, Quickstart off), the BeoPlay integration won't be able to connect with the device. The first time you set it up, the device needs to be powered on. Afterwards, if it cannot connect with the device it will try to connect every 10 seconds, until the device is turned on. I don't recommend running this integration with devices with Quickstart off and WOL off because it will cause network traffic trying to connect time and again.
+
 ## Services
 
 The integration is a Media Player so responds to all Media Player commands.
