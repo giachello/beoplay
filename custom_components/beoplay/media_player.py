@@ -237,6 +237,9 @@ class BeoPlay(MediaPlayerEntity):
         self._serial_number = ""
         self._name = ""
         self._type_number = ""
+        self._type_name = ""
+        self._hw_version = ""
+        self._sw_version = ""
         self._item_number = ""
         self._unique_id = ""
         self._on = self._speaker.on
@@ -287,10 +290,12 @@ class BeoPlay(MediaPlayerEntity):
 
         try:
             await self._speaker.async_notificationsTask(notif_callback)
-        except (asyncio.TimeoutError, ClientError) as _e:
+        except (asyncio.TimeoutError, ClientError, ClientConnectorError) as _e:
             # occasionally the notifications stream is closed by the speaker/TV
-            # In that case, restart the polling
-            self.async_schedule_update_ha_state()
+            # In that case, exit and restart the polling 
+            # Don't update if we haven't initialized yet.
+            if self.hass is not None:
+                self.async_schedule_update_ha_state()
             _LOGGER.info("Client error %s on %s", str(_e), self._name)
             raise
 
@@ -313,12 +318,14 @@ class BeoPlay(MediaPlayerEntity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         return DeviceInfo(
             name=self._name,
             manufacturer="Bang & Olufsen",
-            via_device=(DOMAIN, self._serial_number),
-            model=self._type_number,
+            identifiers={ (DOMAIN, self._serial_number) },
+            model=f'{self._type_number} {self._type_name}',
+            hw_version=self._hw_version,
+            sw_version=self._sw_version,
         )
 
     @property
@@ -487,6 +494,9 @@ class BeoPlay(MediaPlayerEntity):
                 self._name = self._speaker.name
                 self._type_number = self._speaker.typeNumber
                 self._item_number = self._speaker.itemNumber
+                self._type_name = self._speaker.typeName
+                self._hw_version = self._speaker.hardwareVersion
+                self._sw_version = self._speaker.softwareVersion
                 self._unique_id = f"beoplay-{self._serial_number}-media_player"
                 self.entity_id = generate_entity_id(
                     ENTITY_ID_FORMAT, self._name, hass=self._hass
