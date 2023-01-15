@@ -105,7 +105,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
 class BeoPlayData:
-    """Storage class for platform global data."""
+    """Storage class for platform global data. This gets filled in by entity added to hass"""
 
     def __init__(self):
         self.entities = []
@@ -184,15 +184,20 @@ async def _add_player(hass, async_add_devices, host):
 
     speaker = BeoPlay(hass, host)
     await speaker.async_update()
-    async_add_devices([speaker], True)
-    #        async_add_entities(sensors, update_before_add=True)
+    # Only add the device if it responded with its serial number.
+    # Device must be on. This avoids the creation of spurious devices.
+    if speaker.unique_id != "":
+        async_add_devices([speaker], True)
+        if hass.is_running:
+            _start_polling()
+        else:
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _start_polling)
 
-    _LOGGER.info("Added device with name: %s", speaker.name)
-
-    if hass.is_running:
-        _start_polling()
+        _LOGGER.info("Added device with name: %s", speaker.name)
+        return speaker
     else:
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _start_polling)
+        _LOGGER.warning("Could not add %s device: %s", DOMAIN, host)
+        return None
 
 
 async def async_setup_entry(
@@ -248,6 +253,11 @@ class BeoPlay(MediaPlayerEntity):
     async def async_added_to_hass(self):
         self.hass.data[DATA_BEOPLAY].entities.append(self)
 
+    # device is going to be removed, so stop polling the notifications
+    async def async_will_remove_from_hass(self):
+        self.stop_polling()
+        self.hass.data[DATA_BEOPLAY].entities.remove(self)
+
     class _TimeoutException(Exception):
         pass
 
@@ -292,7 +302,7 @@ class BeoPlay(MediaPlayerEntity):
             await self._speaker.async_notificationsTask(notif_callback)
         except (asyncio.TimeoutError, ClientError, ClientConnectorError) as _e:
             # occasionally the notifications stream is closed by the speaker/TV
-            # In that case, exit and restart the polling 
+            # In that case, exit and restart the polling
             # Don't update if we haven't initialized yet.
             if self.hass is not None:
                 self.async_schedule_update_ha_state()
@@ -322,8 +332,8 @@ class BeoPlay(MediaPlayerEntity):
         return DeviceInfo(
             name=self._name,
             manufacturer="Bang & Olufsen",
-            identifiers={ (DOMAIN, self._serial_number) },
-            model=f'{self._type_number} {self._type_name}',
+            identifiers={(DOMAIN, self._serial_number)},
+            model=f"{self._type_number} {self._type_name}",
             hw_version=self._hw_version,
             sw_version=self._sw_version,
         )
@@ -504,7 +514,7 @@ class BeoPlay(MediaPlayerEntity):
                 await self._speaker.async_get_sources()
                 self._first_run = False
             except (ClientError, ClientConnectorError):
-                _LOGGER.debug(
+                _LOGGER.error(
                     "Couldn't connect with %s (maybe Wake-On-Lan / Quickstart is disabled?)",
                     self._speaker._host,
                 )
