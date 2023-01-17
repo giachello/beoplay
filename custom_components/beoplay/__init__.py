@@ -2,11 +2,14 @@
 import asyncio
 
 import voluptuous as vol
+import pybeoplay
+from aiohttp import ClientConnectorError, ClientError
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from homeassistant.core import HomeAssistant
-
-from .const import DOMAIN
+from homeassistant.const import CONF_HOST
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from .const import DOMAIN, CONF_BEOPLAY_API
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -16,16 +19,26 @@ PLATFORMS = ["media_player"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the BeoPlay for Bang & Olufsen component."""
+    """Set up the BeoPlay for Bang & Olufsen component.
+    BeoPlay component cannot be set up using configuration.yaml"""
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up BeoPlay for Bang & Olufsen from a config entry."""
-    # TODO Store an API object for your platforms to access
-    # this is only needed if there is a global API object but we don't have one. we have individual api objects for each device.
 
-    #    hass.data[DOMAIN][entry.entry_id] = MyApi(...)
+    # this is the connection manager with the actual speaker/TV
+    polling_session = async_get_clientsession(hass)
+    host = entry.data[CONF_HOST]
+    api = pybeoplay.BeoPlay(host, polling_session)
+    try:
+        await api.async_get_device_info()
+    except (ClientError, ClientConnectorError) as ex:
+        raise ConfigEntryNotReady(
+            f"Cannot connect to {host}, is it in power saving mode?"
+        ) from ex
+
+    hass.data[DOMAIN] = {entry.entry_id: {CONF_BEOPLAY_API: api, CONF_HOST: host}}
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -46,9 +59,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
     )
 
-    # this is only needed if there is a global API object but we don't have one. we have individual api objects for each device.
-
-    # if unload_ok:
-    #     hass.data[DOMAIN].pop(entry.entry_id)
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok

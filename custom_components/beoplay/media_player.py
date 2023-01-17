@@ -11,29 +11,17 @@ from aiohttp import ServerDisconnectedError, ClientConnectorError, ClientError
 
 import pybeoplay
 
-from .const import (
-    DOMAIN,
-    BEOPLAY_NOTIFICATION,
-)
+from .const import DOMAIN, BEOPLAY_NOTIFICATION, CONF_BEOPLAY_API
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import ServiceDataType
 from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_STOP,
-    SUPPORT_PLAY,
-    SUPPORT_SELECT_SOURCE,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaType,
     RepeatMode,
 )
 from homeassistant.const import (
@@ -52,7 +40,6 @@ from homeassistant.core import callback
 
 # from homeassistant.helpers.script import Script
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 # from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
@@ -68,17 +55,17 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(
 CHECK_TIMEOUT = 5
 
 SUPPORT_BEOPLAY = (
-    SUPPORT_PAUSE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_STOP
-    | SUPPORT_PLAY
-    | SUPPORT_SELECT_SOURCE
+    MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.STOP
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.SELECT_SOURCE
 )
 
 DATA_BEOPLAY = "beoplay_media_player"
@@ -111,7 +98,7 @@ class BeoPlayData:
         self.entities = []
 
 
-async def _add_player(hass, async_add_devices, host):
+async def _add_player(hass: HomeAssistant, async_add_devices, api: pybeoplay.BeoPlay):
     """Add speakers."""
 
     # the callbacks for the services
@@ -182,22 +169,22 @@ async def _add_player(hass, async_add_devices, host):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
 
-    speaker = BeoPlay(hass, host)
+    speaker = BeoPlay(hass, api)
     await speaker.async_update()
     # Only add the device if it responded with its serial number.
     # Device must be on. This avoids the creation of spurious devices.
-    if speaker.unique_id != "":
-        async_add_devices([speaker], True)
-        if hass.is_running:
-            _start_polling()
-        else:
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _start_polling)
-
-        _LOGGER.info("Added device with name: %s", speaker.name)
-        return speaker
-    else:
-        _LOGGER.warning("Could not add %s device: %s", DOMAIN, host)
+    if speaker.unique_id == "":
+        _LOGGER.warning("Could not add %s device: %s", DOMAIN, api._host)
         return None
+
+    async_add_devices([speaker], True)
+    _LOGGER.info("Added device with name: %s", speaker.name)
+    if hass.is_running:
+        _start_polling()
+    else:
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _start_polling)
+
+    return speaker
 
 
 async def async_setup_entry(
@@ -207,36 +194,42 @@ async def async_setup_entry(
 ):
     """Setup sensors from a config entry created in the integrations UI."""
 
-    host = config_entry.data[CONF_HOST]
+    api = hass.data[DOMAIN][config_entry.entry_id][CONF_BEOPLAY_API]
 
     if DATA_BEOPLAY not in hass.data:
         hass.data[DATA_BEOPLAY] = BeoPlayData()
 
-    await _add_player(hass, async_add_entities, host)
+    await _add_player(hass, async_add_entities, api)
 
 
 async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the BeoPlay platform from a manual configuration.yaml."""
 
     host = config.get(CONF_HOST)
+    api = pybeoplay.BeoPlay(host)
+    try:
+        await api.async_get_device_info()
+    except ConnectionError as ex:
+        raise PlatformNotReady(
+            f"Connection error while connecting to {host}: {ex}"
+        ) from ex
+    hass.data[DOMAIN][host][CONF_BEOPLAY_API] = api
 
     if DATA_BEOPLAY not in hass.data:
         hass.data[DATA_BEOPLAY] = BeoPlayData()
 
-    await _add_player(hass, async_add_devices, host)
+    await _add_player(hass, async_add_devices, api)
 
 
 class BeoPlay(MediaPlayerEntity):
     """Representation of a BeoPlay speaker"""
 
-    def __init__(self, hass, host):
-        self._hass: HomeAssistant = hass
-        self._polling_session = async_get_clientsession(hass)
+    def __init__(self, hass: HomeAssistant, api: pybeoplay.BeoPlay) -> None:
+        self._hass = hass
         self._polling_task = None  # The actual polling task.
         self._first_run = True
 
-        # this is the connection manager with the actual speaker/TV
-        self._speaker = pybeoplay.BeoPlay(host, self._polling_session)
+        self._speaker = api
         self._connfail = 0
 
         self._serial_number = ""
@@ -390,7 +383,7 @@ class BeoPlay(MediaPlayerEntity):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        return MEDIA_TYPE_MUSIC
+        return MediaType.MUSIC
 
     @property
     def media_image_url(self):
