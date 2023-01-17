@@ -20,7 +20,7 @@ It should show up as something like this:
 ![beoplay_mini_media_player.png](./beoplay_mini_media_player.png)
 
 ## Power Saving modes caveats (WOL, Quickstart)
-If your TV or speaker is in power saving mode (Wake on Lan off, Quickstart off), the BeoPlay integration won't be able to connect with the device. The first time you set it up, the device needs to be powered on. Afterwards, if it cannot connect with the device it will try to connect every 10 seconds, until the device is turned on. I don't recommend running this integration with devices with Quickstart off and WOL off because it will cause network traffic trying to connect time and again.
+If your TV or speaker is in power saving mode (Wake on Lan off, Quickstart off), the BeoPlay integration won't be able to connect with the device. The first time you set it up, the device needs to be powered on. Afterwards, if it cannot connect with the device it will retry, and reconnect once the device comes back online. 
 
 ## Services
 
@@ -29,17 +29,17 @@ The integration is a Media Player so responds to all Media Player commands.
 It also exposes 3 additional services:
 
 ```
-beoplay_join_experience:
+beoplay.join_experience:
 ```
 This command joins the speaker to the current play experience, just like pressing the 'Join' button on the remote. A source must be playing already for Join to work.
 
 ```
-beoplay_leave_experience:
+beoplay.leave_experience:
 ```
 This command makes the speaker quit the current experience, and turn off.
 
 ```
-beoplay_add_media_to_queue:
+beoplay.add_media_to_queue:
 ```
 This command is experimental. It allows to add a URL of a DLNA asset on your network to the speaker and play it. Let me know if it works for you!
 
@@ -50,7 +50,9 @@ These are called through service calls, e.g.:
 
 ## Events
 
-Beoplay also generates events (`beoplay_notification`) where you can track status changes of the speaker. You can use this to enable all kinds of cool experiences. For example, you can catch when the user activates a source like `A.MEM` to control automations on the Home Assistant. For example you could start a streaming player that is connected with your B&O equipment. I use it to track when the TV turns on, to select a certain source, and adjust the lights in the room to create a better ambiance.
+Beoplay also generates events (`beoplay_notification`) where you can track status changes of the speaker. You can use this to enable all kinds of cool experiences. For example, you can catch when the user activates a source like `A.MEM` to control automations on the Home Assistant. For example:
+* Start a streaming player that is connected with your B&O equipment.
+* Track when the TV turns on, to select a certain source, and adjust the lights in the room to create a better ambiance.
 
 <img width="739" alt="image" src="https://user-images.githubusercontent.com/60585229/145608754-8107acb5-fb85-447a-87bd-3f3804e5e3ed.png">
 
