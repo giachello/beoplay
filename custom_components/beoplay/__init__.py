@@ -38,7 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             f"Cannot connect to {host}, is it in power saving mode?"
         ) from ex
 
-    hass.data[DOMAIN] = {entry.entry_id: {CONF_BEOPLAY_API: api, CONF_HOST: host}}
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][entry.entry_id] = {CONF_BEOPLAY_API: api, CONF_HOST: host}
 
     for component in PLATFORMS:
         hass.async_create_task(
