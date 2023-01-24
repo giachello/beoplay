@@ -3,7 +3,7 @@
 This component enables integration of B&O Audio/Video equipment with Home Assistant and specifically TVs, Speakers and units like the BeoLink Converter ML/NL. 
 
 ## Installation via HACS
-The preferred type of installation is via [HACS](https://hacs.xyz). In this way, you'll get updates when there are new versions.
+The preferred type of installation is via [HACS](https://hacs.xyz). This way, you'll get updates when there are new versions.
 
 ### Manual Installation
 
@@ -15,7 +15,7 @@ Configuration is very simple, go to Configuration -> Integrations -> Add Integra
 
 The component also works with Zeroconf, so B&amp;O devices should automaticlly show up in your discovery panel (Configuration->Integrations)
 
-It should show up as something like this:
+Once configured, it should show up as something like this:
 
 ![beoplay_mini_media_player.png](./beoplay_mini_media_player.png)
 
@@ -29,17 +29,17 @@ The integration is a Media Player so responds to all Media Player commands.
 It also exposes 3 additional services:
 
 ```
-beoplay.join_experience:
+beoplay.beoplay_join_experience:
 ```
 This command joins the speaker to the current play experience, just like pressing the 'Join' button on the remote. A source must be playing already for Join to work.
 
 ```
-beoplay.leave_experience:
+beoplay.beoplay_leave_experience:
 ```
 This command makes the speaker quit the current experience, and turn off.
 
 ```
-beoplay.add_media_to_queue:
+beoplay.beoplay_add_media_to_queue:
 ```
 This command is experimental. It allows to add a URL of a DLNA asset on your network to the speaker and play it. Let me know if it works for you!
 
