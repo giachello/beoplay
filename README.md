@@ -1,6 +1,6 @@
 # BeoPlay: Bang & Olufsen Speakers and TVs in Home Assistant
 
-This component enables integration of B&O Audio/Video equipment with Home Assistant and specifically TVs, Speakers and units like the BeoLink Converter ML/NL. BeoPlay API is the 2nd generation B&O API, after [Masterlink Gateway](https://github.com/giachello/mlgw) and before [Mozart](https://github.com/bang-olufsen/mozart-open-api). It is supported by devices built from the early 2000s to the late 2010s, including several BeoVision TV, BeoLab speakers and the NL/ML Converter.
+This component enables integration of B&O Audio/Video equipment with Home Assistant and specifically TVs, Speakers and units like the BeoLink Converter ML/NL. BeoPlay API is the 2nd generation B&O API, after [Masterlink Gateway](https://github.com/giachello/mlgw) and before [Mozart](https://github.com/bang-olufsen/mozart-open-api). It is supported by devices built since 2015, including several BeoVision TV, newer BeoLab speakers and the NL/ML Converter.
 
 ## Installation via HACS
 The preferred type of installation is via [HACS](https://hacs.xyz). This way, you'll get updates when there are new versions.
