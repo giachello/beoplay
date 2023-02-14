@@ -60,6 +60,7 @@ These are called through service calls, e.g.:
 Beoplay also generates events (`beoplay_notification`) where you can track status changes of the speaker. You can use this to enable all kinds of cool experiences. For example, you can catch when the user activates a source like `A.MEM` to control automations on the Home Assistant. For example:
 * Start a streaming player that is connected with your B&O equipment.
 * Track when the TV turns on, to select a certain source, and adjust the lights in the room to create a better ambiance.
+* Track when the user presses a Light/Control or Function command on the BeoPlay remote (only works with certain devices, e.g., M3 speakers, but not with others, e.g. BeoVision Avant).
 
 <img width="739" alt="image" src="https://user-images.githubusercontent.com/60585229/145608754-8107acb5-fb85-447a-87bd-3f3804e5e3ed.png">
 
