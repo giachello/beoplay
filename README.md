@@ -1,6 +1,13 @@
 # BeoPlay: Bang & Olufsen Speakers and TVs in Home Assistant
 
-This component enables integration of B&O Audio/Video equipment with Home Assistant and specifically TVs, Speakers and units like the BeoLink Converter ML/NL. BeoPlay API is the 2nd generation B&O API, after [Masterlink Gateway](https://github.com/giachello/mlgw) and before [Mozart](https://github.com/bang-olufsen/mozart-open-api). It is supported by devices built since 2015, including several BeoVision TV, newer BeoLab speakers and the NL/ML Converter.
+This component enables integration of B&O Audio/Video equipment with Home Assistant: TVs, Speakers and units like the BeoLink Converter ML/NL. BeoPlay API is the 2nd generation B&O API, after [Masterlink Gateway](https://github.com/giachello/mlgw) and before [Mozart](https://github.com/bang-olufsen/mozart-open-api). It is supported by devices built from 2015 onwards, including several BeoVision TV, newer BeoLab speakers and the NL/ML Converter.
+
+It allows you to:
+* Control speakers and TVs just like a remote control (turn on, off, volume, select source, playback, media)
+* Execute Home Assistant automations based on:
+  * Status changes (Source, what's playing, volume...)  
+  * BeoOne "Light/Control" and "Function" keypresses on select systems. YMMV, not all devices support this.
+
 
 ## Installation via HACS
 The preferred type of installation is via [HACS](https://hacs.xyz). This way, you'll get updates when there are new versions.
@@ -11,9 +18,9 @@ You can also install it manually in custom_components. Just copy the full conten
 
 ## Configuration
 
-Configuration is very simple, go to Configuration -> Integrations -> Add Integration (bottom right corner), search for BeoPlay and insert the host name or IP. It should work with both TVs, Speakers and other devices like NL/ML converters.
+B&amp;O devices should automaticlly show up in your discovery panel (Configuration->Integrations). Just press "Configure".
 
-The component also works with Zeroconf, so B&amp;O devices should automaticlly show up in your discovery panel (Configuration->Integrations)
+If they don't show up, go to Configuration -> Integrations -> Add Integration (bottom right corner), search for BeoPlay and insert the host name or IP. It should work with both TVs, Speakers and other devices like NL/ML converters.
 
 Once configured, it should show up as something like this:
 
