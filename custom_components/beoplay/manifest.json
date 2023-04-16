@@ -1,20 +1,20 @@
 {
   "domain": "beoplay",
   "name": "BeoPlay for Bang & Olufsen",
-  "integration_type": "device",
-  "version": "2023.4.1",
+  "codeowners": [
+    "@giachello"
+  ],
   "config_flow": true,
+  "dependencies": ["http", "zeroconf"],
   "documentation": "https://www.home-assistant.io/integrations/beoplay",
+  "homekit": {},
+  "integration_type": "device",
+  "iot_class": "local_push",
   "issue_tracker": "https://github.com/giachello/beoplay/issues",
   "requirements": [
     "pybeoplay==1.1.0"
   ],
   "ssdp": [],
-  "zeroconf": ["_beoremote._tcp.local."],
-  "homekit": {},
-  "iot_class": "local_push",
-  "dependencies": ["http", "zeroconf"],
-  "codeowners": [
-    "@giachello"
-  ]
+  "version": "2023.4.1",
+  "zeroconf": ["_beoremote._tcp.local."]
 }
