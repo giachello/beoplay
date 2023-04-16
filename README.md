@@ -26,7 +26,7 @@ Once configured, it should show up as something like this:
 
 ![beoplay_mini_media_player.png](./beoplay_mini_media_player.png)
 
-## Power Saving modes caveats (WOL, Quickstart)
+### Power Saving modes caveats (WOL, Quickstart)
 
 If your TV or speaker is in power saving mode (Wake on Lan off, Quickstart off), the BeoPlay integration won't be able to connect with the device. The first time you set it up, the device needs to be powered on. Afterwards, if it cannot connect with the device it will retry, and reconnect once the device comes back online. 
 
