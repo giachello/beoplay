@@ -13,9 +13,8 @@ from .const import DOMAIN, CONF_BEOPLAY_API
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-PLATFORMS = ["media_player"]
+# List the platforms that you want to support. BeoPlay supports both a media player and a remote
+PLATFORMS = ["media_player", "remote"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):

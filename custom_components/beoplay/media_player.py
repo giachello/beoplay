@@ -202,24 +202,26 @@ async def async_setup_entry(
     await _add_player(hass, async_add_entities, api)
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the BeoPlay platform from a manual configuration.yaml."""
-
-    host = config.get(CONF_HOST)
-    api = pybeoplay.BeoPlay(host)
-    try:
-        await api.async_get_device_info()
-    except ConnectionError as ex:
-        raise PlatformNotReady(
-            f"Connection error while connecting to {host}: {ex}"
-        ) from ex
-    hass.data[DOMAIN][host][CONF_BEOPLAY_API] = api
-
-    if DATA_BEOPLAY not in hass.data:
-        hass.data[DATA_BEOPLAY] = BeoPlayData()
-
-    await _add_player(hass, async_add_devices, api)
-
+#removing manual configuration
+#
+#async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+#    """Set up the BeoPlay platform from a manual configuration.yaml."""
+#
+#    host = config.get(CONF_HOST)
+#    api = pybeoplay.BeoPlay(host)
+#    try:
+#        await api.async_get_device_info()
+#    except ConnectionError as ex:
+#        raise PlatformNotReady(
+#            f"Connection error while connecting to {host}: {ex}"
+#        ) from ex
+#    hass.data[DOMAIN][host][CONF_BEOPLAY_API] = api
+#
+#    if DATA_BEOPLAY not in hass.data:
+#        hass.data[DATA_BEOPLAY] = BeoPlayData()
+#
+#    await _add_player(hass, async_add_devices, api)
+# 
 
 class BeoPlay(MediaPlayerEntity):
     """Representation of a BeoPlay speaker"""
