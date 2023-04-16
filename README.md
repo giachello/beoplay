@@ -27,7 +27,21 @@ Once configured, it should show up as something like this:
 ![beoplay_mini_media_player.png](./beoplay_mini_media_player.png)
 
 ## Power Saving modes caveats (WOL, Quickstart)
+
 If your TV or speaker is in power saving mode (Wake on Lan off, Quickstart off), the BeoPlay integration won't be able to connect with the device. The first time you set it up, the device needs to be powered on. Afterwards, if it cannot connect with the device it will retry, and reconnect once the device comes back online. 
+
+## Using the integration
+
+The `beoplay` integration creates a `media_player` and `remote` entities for each device. The `media_player` can be used as any other on Home Assistant, and responds to most common commands. 
+
+The `remote` can be used to send specific key-presses to the device, just as if you were to press the equivalent key on your Beo remote. The following keypresses are supported:
+
+`Cursor/Select, Cursor/Up, Cursor/Down, Cursor/Left, Cursor/Right, Cursor/Exit, Cursor/Back, Cursor/PageUp, Cursor/PageDown, Cursor/Clear, Stream/Play, Stream/Stop, Stream/Pause, Stream/Wind, Stream/Rewind, Stream/Forward, Stream/Backward, List/StepUp, List/StepDown, List/PreviousElement, List/Shuffle, List/Repeat, Menu/Root, Menu/Option, Menu/Setup, Menu/Contents, Menu/Favorites, Menu/ElectronicProgramGuide, Menu/VideoOnDemand, Menu/Text, Menu/HbbTV,Menu/HomeControl, Device/Information, Device/Eject, Device/TogglePower, Device/Languages, Device/Subtitles, Device/OneWayJoin, Device/Mots, Record/Record, Generic/Blue, Generic/Red, Generic/Green, Generic/Yellow`
+
+See below for an example:
+
+![image](https://user-images.githubusercontent.com/60585229/232346866-6d185bb5-eedd-4ee2-9a88-79d38a0a2f41.png)
+
 
 ## Services
 
