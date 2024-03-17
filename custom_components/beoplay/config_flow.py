@@ -12,18 +12,23 @@ from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import AbortFlow
 
-from .const import DOMAIN
+from .const import DOMAIN, BEOPLAY_TYPES, CONF_TYPE
 
 _LOGGER = logging.getLogger(__name__)
 
 
-DATA_SCHEMA = vol.Schema(
+USER_STEP_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=""): str,
-        #        vol.Optional(CONF_TYPE, default="TV"): vol.In(BEOPLAY_TYPES),
+        vol.Optional(CONF_TYPE, default="Track"): vol.In(BEOPLAY_TYPES),
     }
 )
 
+ZERO_CONF_DATA_SCHEMA =  vol.Schema(
+    {
+        vol.Optional(CONF_TYPE, default="Track"): vol.In(BEOPLAY_TYPES),
+    }
+)
 
 def host_valid(host):
     """Return True if hostname or IP address is valid."""
@@ -75,7 +80,7 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="single_instance_allowed")
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=USER_STEP_DATA_SCHEMA, errors=errors
         )
 
     async def async_step_zeroconf(self, discovery_info):
@@ -159,7 +164,7 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title=title,
                 data={
                     CONF_HOST: self.host,
-                    #                CONF_TYPE: user_input[CONF_TYPE]
+                    CONF_TYPE: user_input[CONF_TYPE]
                 },
             )
 
@@ -167,9 +172,7 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            #            data_schema=vol.Schema(
-            #                {vol.Optional(CONF_TYPE, default="Speaker"): vol.In(BEOPLAY_TYPES)}
-            #            ),
+            data_schema=ZERO_CONF_DATA_SCHEMA,
             description_placeholders={
                 "serial_number": _sn,
                 "model": _tn,

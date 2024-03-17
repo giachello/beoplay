@@ -11,7 +11,7 @@ from aiohttp import ServerDisconnectedError, ClientConnectorError, ClientError
 
 import pybeoplay
 
-from .const import DOMAIN, BEOPLAY_NOTIFICATION, CONF_BEOPLAY_API
+from .const import DOMAIN, BEOPLAY_NOTIFICATION, CONF_BEOPLAY_API, CONF_TYPE, BEOPLAY_CHANNEL
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
@@ -98,7 +98,7 @@ class BeoPlayData:
         self.entities = []
 
 
-async def _add_player(hass: HomeAssistant, async_add_devices, api: pybeoplay.BeoPlay):
+async def _add_player(hass: HomeAssistant, async_add_devices, api: pybeoplay.BeoPlay, type):
     """Add speakers."""
 
     # the callbacks for the services
@@ -169,7 +169,7 @@ async def _add_player(hass: HomeAssistant, async_add_devices, api: pybeoplay.Beo
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
 
-    speaker = BeoPlay(hass, api)
+    speaker = BeoPlay(hass, api, type)
     await speaker.async_update()
     # Only add the device if it responded with its serial number.
     # Device must be on. This avoids the creation of spurious devices.
@@ -195,38 +195,18 @@ async def async_setup_entry(
     """Setup sensors from a config entry created in the integrations UI."""
 
     api = hass.data[DOMAIN][config_entry.entry_id][CONF_BEOPLAY_API]
+    type = config_entry.data[CONF_TYPE]
 
     if DATA_BEOPLAY not in hass.data:
         hass.data[DATA_BEOPLAY] = BeoPlayData()
 
-    await _add_player(hass, async_add_entities, api)
+    await _add_player(hass, async_add_entities, api, type)
 
-
-#removing manual configuration
-#
-#async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-#    """Set up the BeoPlay platform from a manual configuration.yaml."""
-#
-#    host = config.get(CONF_HOST)
-#    api = pybeoplay.BeoPlay(host)
-#    try:
-#        await api.async_get_device_info()
-#    except ConnectionError as ex:
-#        raise PlatformNotReady(
-#            f"Connection error while connecting to {host}: {ex}"
-#        ) from ex
-#    hass.data[DOMAIN][host][CONF_BEOPLAY_API] = api
-#
-#    if DATA_BEOPLAY not in hass.data:
-#        hass.data[DATA_BEOPLAY] = BeoPlayData()
-#
-#    await _add_player(hass, async_add_devices, api)
-# 
 
 class BeoPlay(MediaPlayerEntity):
     """Representation of a BeoPlay speaker"""
 
-    def __init__(self, hass: HomeAssistant, api: pybeoplay.BeoPlay) -> None:
+    def __init__(self, hass: HomeAssistant, api: pybeoplay.BeoPlay, type ) -> None:
         self._hass = hass
         self._polling_task = None  # The actual polling task.
         self._first_run = True
@@ -244,6 +224,7 @@ class BeoPlay(MediaPlayerEntity):
         self._unique_id = ""
         self._on = self._speaker.on
         self._state = self._speaker.state
+        self._beoplay_type = type
 
     async def async_added_to_hass(self):
         self.hass.data[DATA_BEOPLAY].entities.append(self)
@@ -445,20 +426,26 @@ class BeoPlay(MediaPlayerEntity):
         self._speaker.Stop()
 
     def media_previous_track(self):
-        """Send previous track command."""
-        self._speaker.Prev()
+        """Send previous track command. Will use the type of command appropriate for the device, based on the configuration."""
+        if (self._beoplay_type == BEOPLAY_CHANNEL):
+            self._speaker.StepDown()
+        else:
+            self._speaker.Backward()
 
     def media_next_track(self):
         """Send next track command."""
-        self._speaker.Next()
+        if (self._beoplay_type == BEOPLAY_CHANNEL):
+            self._speaker.StepUp()
+        else:
+            self._speaker.Forward()
 
     def set_shuffle(self, shuffle: bool) -> None:
         """Send previous track command."""
-        self._speaker.Prev()
+        self._speaker.Shuffle()
 
     def set_repeat(self, repeat: RepeatMode) -> None:
         """Send next track command."""
-        self._speaker.Next()
+        self._speaker.Repeat()
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
