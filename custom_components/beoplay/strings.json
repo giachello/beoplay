@@ -29,5 +29,42 @@
       "no_serial_number" : "Couldn't fetch serial number",
       "not_beoplay_device" : "Not a BeoPlay device."
     }
+  },
+  "services": {
+    "beoplay_join_experience": {
+      "name": "Join Experience",
+      "description": "Join an ongoing playback experience.",
+      "fields": {
+        "entity_id": {
+          "name": "B&O Media player",
+          "description": "The device that will join the experience."
+        }
+      }
+    },
+    "beoplay_leave_experience": {
+      "name": "Leave Experience",
+      "description": "Leave the current playback experience.",
+      "fields": {
+        "entity_id": {
+          "name": "B&O Media player",
+          "description": "The device that will leave the experience."
+        }
+      }
+    },
+    "beoplay_add_media_to_queue": {
+      "name": "Add to playback Queue",
+      "description": "Add media to the current playback queue.",
+      "fields": {
+        "entity_id": {
+          "name": "B&O Media player",
+          "description": "The device that will join the experience."
+        },
+        "url": {
+          "name": "URL of Media item",
+          "description": "The media to add to the queue."
+        }
+      }
+    }
+
   }
 }
