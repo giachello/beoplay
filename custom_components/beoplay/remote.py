@@ -50,6 +50,8 @@ class BeoPlayRemote(RemoteEntity):
         self._attr_name = name
         self._name = name
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass )
+        _LOGGER.info("Entity_id: %s", self.entity_id)
+
         self._attr_unique_id = identifier
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, identifier)})
 

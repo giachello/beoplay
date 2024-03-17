@@ -26,6 +26,12 @@ Once configured, it should show up as something like this:
 
 ![beoplay_mini_media_player.png](./beoplay_mini_media_player.png)
 
+### Configuring the Next/Prev button actions
+
+Older B&O devices use "Step Up" and "Step Down" to change CD tracks and radio channels. This includes the Beolink Converter NL/ML and BeoVision Avant TVs. Newer devices use "Forward" and "Backward" commands, including smart speakers and audio devices.
+
+You can select which one to use during the configuration flow. The defauly is Forward/Backward.
+
 ### Power Saving modes caveats (WOL, Quickstart)
 
 If your TV or speaker is in power saving mode (Wake on Lan off, Quickstart off), the BeoPlay integration won't be able to connect with the device. The first time you set it up, the device needs to be powered on. Afterwards, if it cannot connect with the device it will retry, and reconnect once the device comes back online. 

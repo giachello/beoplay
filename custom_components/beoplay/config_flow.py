@@ -1,18 +1,18 @@
 """Config flow for BeoPlay for Bang & Olufsen."""
-import pybeoplay as beoplay
-
 import ipaddress
-import re
 import logging
+import re
+
 from aiohttp import ClientError
+import pybeoplay as beoplay
 import voluptuous as vol
 
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, BEOPLAY_TYPES, CONF_TYPE
+from .const import BEOPLAY_TRACK, BEOPLAY_TYPES, CONF_TYPE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,20 +20,21 @@ _LOGGER = logging.getLogger(__name__)
 USER_STEP_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=""): str,
-        vol.Optional(CONF_TYPE, default="Track"): vol.In(BEOPLAY_TYPES),
+        vol.Optional(CONF_TYPE, default=BEOPLAY_TRACK): vol.In(BEOPLAY_TYPES),
     }
 )
 
-ZERO_CONF_DATA_SCHEMA =  vol.Schema(
+ZERO_CONF_DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_TYPE, default="Track"): vol.In(BEOPLAY_TYPES),
+        vol.Optional(CONF_TYPE, default=BEOPLAY_TRACK): vol.In(BEOPLAY_TYPES),
     }
 )
+
 
 def host_valid(host):
     """Return True if hostname or IP address is valid."""
     try:
-        if ipaddress.ip_address(host).version == (4 or 6):
+        if ipaddress.ip_address(host).version in (4, 6):
             return True
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
@@ -46,7 +47,7 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
         self.beoplayapi = None
         self.host = None
@@ -162,10 +163,7 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             return self.async_create_entry(
                 title=title,
-                data={
-                    CONF_HOST: self.host,
-                    CONF_TYPE: user_input[CONF_TYPE]
-                },
+                data={CONF_HOST: self.host, CONF_TYPE: user_input[CONF_TYPE]},
             )
 
         _LOGGER.debug("zeroconf_confirm calling show form: %s", _name)

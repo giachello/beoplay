@@ -12,21 +12,22 @@
         "description": "Set up BeoPlay device. If you have problems with configuration go to: https://github.com/giachello/beoplay",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "type": "Device type"
+          "type": "Select Next/Previous action (StepUp/Down for older devices, Forward/Backward for newer)"
         }
       },
       "zeroconf_confirm": {
         "description": "Do you want to add {name} with serial number {serial_number} to Home Assistant?",
         "title": "Discovered BeoPlay device",
         "data": {
-          "type": "Device type"
+          "type": "Select Next/Previous action (StepUp/Down for older devices, Forward/Backward for newer)"
         }
       }
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
-      "no_serial_number" : "Couldn't fetch serial number"
+      "no_serial_number" : "Couldn't fetch serial number",
+      "not_beoplay_device" : "Not a BeoPlay device."
     }
   }
 }
