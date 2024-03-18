@@ -30,7 +30,7 @@ Once configured, it should show up as something like this:
 
 Older B&O devices use "Step Up" and "Step Down" to change CD tracks and radio channels. This includes the Beolink Converter NL/ML and BeoVision Avant TVs. Newer devices use "Forward" and "Backward" commands, including smart speakers and audio devices.
 
-You can select which one to use during the configuration flow. The defauly is Forward/Backward.
+You can select which one to use during the configuration flow. The default is Forward/Backward.
 
 ### Power Saving modes caveats (WOL, Quickstart)
 
