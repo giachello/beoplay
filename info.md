@@ -11,6 +11,6 @@ MLGW is compatible with any version since 2021.1.1
 
 ## Setup
 
-To setup the integration, install it through Hacs or by copying the files in your `custom_components/beoplay` folder. Then, the Bang & Olufsen devices should show up automatically in the Integrations panel in Home Assistant.
+To setup the integration, install it through Hacs or by copying the files in your `custom_components/beoplay` folder. Then, the Bang & Olufsen devices should show up automatically in the Integrations panel in Home Assistant. You can configure what the Next/Previous action does in the setup flow (StepUp/Down for older devices, Forward/Backward for newer).
 
 More information here: ![README.md](https://github.com/giachello/beoplay/blob/main/README.md)

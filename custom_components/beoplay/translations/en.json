@@ -1,34 +1,31 @@
 {
     "config": {
-        "abort": {
-            "no_devices_found": "No devices found on the network",
-            "single_instance_allowed": "Already configured. Only a single configuration possible.",
-            "no_serial_number" : "Couldn't fetch serial number."
+      "error": {
+        "cannot_connect": "Failed to connect",
+        "connection_error": "Failed to connect",
+        "snmp_error": "SNMP server turned off.",
+        "wrong_host": "Invalid hostname or IP address."
+      },
+      "flow_title": "BeoPlay Device: {model} {serial_number}",
+      "step": {
+        "user": {
+          "description": "Set up BeoPlay device. If you have problems with configuration check out: https://github.com/giachello/beoplay",
+          "data": {
+            "host": "Hostname of your B&O device",
+            "type": "Select Next/Previous action (StepUp/Down for older devices, Forward/Backward for newer)"
+          }
         },
-        "error": {
-            "cannot_connect": "Failed to connect",
-            "connection_error": "Failed to connect",
-            "snmp_error": "SNMP server turned off or printer not supported.",
-            "wrong_host": "Invalid hostname or IP address."
-        },
-        "flow_title": "BeoPlay Device: {model} {serial_number}",
-        "step": {
-            "user": {
-                "data": {
-                    "host": "Host",
-                    "type": "Device Type"
-                },
-                "description": "Set up BeoPlay device. If you have problems with the configuration check out: https://github.com/giachello/beoplay",
-                "title": "BeoPlay Add Device"
-            },
-            "zeroconf_confirm": {
-                "data": {
-                    "type": "Device Type"
-                },
-                "description": "Do you want to add {name} with serial number {serial_number} to Home Assistant?",
-                "title": "Discovered BeoPlay device"
-            }
+        "zeroconf_confirm": {
+          "description": "Do you want to add {name} with serial number {serial_number} to Home Assistant?",
+          "title": "Discovered BeoPlay device",
+          "data": {
+            "type": "Select Next/Previous action (StepUp/Down for older devices, Forward/Backward for newer)"
+          }
         }
-    },
-    "title": "Bang & Olufsen BeoPlay Devices"
+      },
+      "abort": {
+        "no_serial_number" : "Couldn't fetch serial number",
+        "not_beoplay_device" : "Not a BeoPlay device."
+      }
+    }
 }

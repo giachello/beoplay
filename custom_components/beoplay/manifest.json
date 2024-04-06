@@ -6,7 +6,7 @@
   ],
   "config_flow": true,
   "dependencies": ["http", "zeroconf"],
-  "documentation": "https://www.home-assistant.io/integrations/beoplay",
+  "documentation": "https://github.com/giachello/beoplay",
   "homekit": {},
   "integration_type": "device",
   "iot_class": "local_push",
@@ -15,6 +15,6 @@
     "pybeoplay==2.0.0"
   ],
   "ssdp": [],
-  "version": "2024.3.1",
+  "version": "2024.3.2",
   "zeroconf": ["_beoremote._tcp.local."]
 }
