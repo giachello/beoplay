@@ -87,6 +87,7 @@ ADD_MEDIA_SCHEMA = vol.Schema(
     }
 )
 
+BEOPLAY_POLL_TASK = "BeoPlay Poll Task"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -256,7 +257,7 @@ class BeoPlay(MediaPlayerEntity):
 
     def start_polling(self):
         """Start the polling task."""
-        self._polling_task = self._hass.async_add_job(self._start_poll_command())
+        self._polling_task = self._hass.async_create_background_task(self._start_poll_command(), BEOPLAY_POLL_TASK )
 
     def stop_polling(self):
         """Stop the polling task."""
