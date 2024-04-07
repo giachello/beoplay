@@ -4,6 +4,7 @@ Support for Bang & Olufsen speakers
 import logging
 from datetime import timedelta
 import voluptuous as vol
+import urllib.parse
 
 import asyncio
 from asyncio import CancelledError
@@ -372,9 +373,12 @@ class BeoPlay(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        # if self._speaker.source == "AirPlay":
-        #    return None
-        return self._speaker.media_url if self._speaker.media_url else None
+        if self._speaker.media_url:
+            if self._speaker.source == "AirPlay":
+                media_url_params = urllib.parse.urlencode({'track': self._speaker.media_track})
+                return f"{self._speaker.media_url}?{media_url_params}"
+            return self._speaker.media_url
+        return None
 
     @property
     def media_title(self):
