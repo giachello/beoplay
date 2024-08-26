@@ -79,9 +79,15 @@ class BeoPlayRemote(RemoteEntity):
 
         for _ in range(num_repeats):
             for single_command in command:
-                if single_command not in self.api.remote_commands:
-                    raise ValueError("Command not found. Exiting sequence")
+                if single_command in self.api.remote_commands:
+                    _LOGGER.info("Sending command %s", single_command)
+                    await self.api.async_remote_command(single_command)
+                    await asyncio.sleep(delay)
+                elif single_command in self.api.digits:
+                    _LOGGER.info("Sending digit %s", single_command)
+                    await self.api.async_digits(single_command)
+                    await asyncio.sleep(delay)
+                else:
+                    raise ValueError(f"Command '{single_command}' not found. Ending.")
 
-                _LOGGER.info("Sending command %s", single_command)
-                await self.api.async_remote_command(single_command)
-                await asyncio.sleep(delay)
+
