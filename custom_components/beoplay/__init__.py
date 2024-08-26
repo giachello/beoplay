@@ -1,15 +1,17 @@
 """The BeoPlay for Bang & Olufsen integration."""
+
 import asyncio
 
-import voluptuous as vol
-import pybeoplay
 from aiohttp import ClientConnectorError, ClientError
+import pybeoplay
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
-from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from .const import DOMAIN, CONF_BEOPLAY_API
+
+from .const import CONF_BEOPLAY_API, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
@@ -19,7 +21,9 @@ PLATFORMS = ["media_player", "remote"]
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the BeoPlay for Bang & Olufsen component.
-    BeoPlay component cannot be set up using configuration.yaml"""
+
+    BeoPlay component cannot be set up using configuration.yaml.
+    """
     return True
 
 
@@ -41,11 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = {CONF_BEOPLAY_API: api, CONF_HOST: host}
 
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
-
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
