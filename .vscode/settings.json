@@ -1,10 +1,6 @@
 {
-    "python.autoComplete.extraPaths": [
-        "c:\\Users\\giac\\core",
-        "c:\\Users\\giac\\Coding"
-    ],
-    "python.analysis.extraPaths": [
-        "c:\\Users\\giac\\core",
-        "c:\\Users\\giac\\Coding"
-    ]
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true
+    }
 }
