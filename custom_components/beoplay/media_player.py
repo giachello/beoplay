@@ -67,6 +67,7 @@ SUPPORT_BEOPLAY = (
     | MediaPlayerEntityFeature.STOP
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.SELECT_SOUND_MODE
 )
 
 DATA_BEOPLAY = "beoplay_media_player"
@@ -356,6 +357,16 @@ class BeoPlay(MediaPlayerEntity):
         return self._speaker.sources if self._speaker.sources else None
 
     @property
+    def sound_mode(self):
+        """Return the current sound mode."""
+        return self._speaker.soundMode if self._speaker.soundMode else None
+
+    @property
+    def sound_mode_list(self):
+        """List of available sound modes."""
+        return self._speaker.soundModes if self._speaker.soundModes else None
+
+    @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         return self._speaker.volume
@@ -460,6 +471,10 @@ class BeoPlay(MediaPlayerEntity):
         """Send mute command"""
         self._speaker.setMute(mute)
 
+    def select_sound_mode(self, sound_mode):
+        """Select sound mode."""
+        self._speaker.setSoundMode(sound_mode)
+
     def select_source(self, source):
         """Select input source."""
         self._speaker.setSource(source)
@@ -499,6 +514,7 @@ class BeoPlay(MediaPlayerEntity):
                     ENTITY_ID_FORMAT, self._name, hass=self._hass
                 )
                 await self._speaker.async_get_sources()
+                await self._speaker.async_get_sound_modes()
                 self._first_run = False
             except (ClientError, ClientConnectorError):
                 _LOGGER.error(
