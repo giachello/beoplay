@@ -1,49 +1,59 @@
+"""Support for Bang & Olufsen BeoPlay speakers for Home Assistant.
+This file provides a Media Player interface to Bang & Olufsen devices using the BeoPlay interface.
+
+Key features:
+* Most Media Player functionality, including media information, sound modes, ...
+* Completely async implementation
+* Smart retry in case device is turned off
+* Forwarding of Notifications from the device to Home Assistant Events
+
 """
-Support for Bang & Olufsen speakers
-"""
-import logging
-from datetime import timedelta
-import voluptuous as vol
-import urllib.parse
 
 import asyncio
 from asyncio import CancelledError
-from aiohttp import ServerDisconnectedError, ClientConnectorError, ClientError
+from datetime import timedelta
+import logging
+import urllib.parse
 
+from aiohttp import ClientConnectorError, ClientError, ServerDisconnectedError
 import pybeoplay
+import voluptuous as vol
 
-from .const import DOMAIN, BEOPLAY_NOTIFICATION, CONF_BEOPLAY_API, CONF_TYPE, BEOPLAY_CHANNEL
-
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.typing import ServiceDataType
-from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaType,
     RepeatMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_URL,
-    CONF_HOST,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 # from homeassistant.helpers.script import Script
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
+from homeassistant.helpers.typing import ServiceDataType
 
 # from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
+
+from .const import (
+    BEOPLAY_CHANNEL,
+    BEOPLAY_NOTIFICATION,
+    CONF_BEOPLAY_API,
+    CONF_TYPE,
+    DOMAIN,
+)
 
 REQUIREMENTS = ["pybeoplay"]
 
@@ -95,18 +105,21 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
 class BeoPlayData:
-    """Storage class for platform global data. This gets filled in by entity added to hass"""
+    """Storage class for platform global data. This gets filled in by entity added to hass."""
 
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the data."""
         self.entities = []
 
 
-async def _add_player(hass: HomeAssistant, async_add_devices, api: pybeoplay.BeoPlay, type):
+async def _add_player(
+    hass: HomeAssistant, async_add_devices, api: pybeoplay.BeoPlay, type
+):
     """Add speakers."""
 
     # the callbacks for the services
     def join_experience(service: ServiceDataType):
-        """Join to an existing experience"""
+        """Join to an existing experience."""
         _LOGGER.debug("Join experience service called")
         entity_ids = service.data.get("entity_id")
         entities = hass.data[DATA_BEOPLAY].entities
@@ -117,7 +130,7 @@ async def _add_player(hass: HomeAssistant, async_add_devices, api: pybeoplay.Beo
             entity.join_experience()
 
     def leave_experience(service: ServiceDataType):
-        """Leave an existing experience"""
+        """Leave an existing experience."""
         _LOGGER.debug("Leave experience service called")
         entity_ids = service.data.get("entity_id")
         entities = hass.data[DATA_BEOPLAY].entities
@@ -128,7 +141,7 @@ async def _add_player(hass: HomeAssistant, async_add_devices, api: pybeoplay.Beo
             entity.leave_experience()
 
     def add_media(service: ServiceDataType):
-        """Leave an existing experience"""
+        """Leave an existing experience."""
         _LOGGER.debug("Add Media to Queue service called")
         entity_ids = service.data.get("entity_id")
         url = service.data.get("url")
@@ -177,7 +190,7 @@ async def _add_player(hass: HomeAssistant, async_add_devices, api: pybeoplay.Beo
     # Only add the device if it responded with its serial number.
     # Device must be on. This avoids the creation of spurious devices.
     if speaker.unique_id == "":
-        _LOGGER.warning("Could not add %s device: %s", DOMAIN, api._host)
+        _LOGGER.warning("Could not add %s device: %s", DOMAIN, api.host)
         return None
 
     async_add_devices([speaker], True)
@@ -195,21 +208,22 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities,
 ):
-    """Setup sensors from a config entry created in the integrations UI."""
+    """Set up sensors from a config entry created in the integrations UI."""
 
-    api = hass.data[DOMAIN][config_entry.entry_id][CONF_BEOPLAY_API]
-    type = config_entry.data[CONF_TYPE]
+    beoplay_api = hass.data[DOMAIN][config_entry.entry_id][CONF_BEOPLAY_API]
+    conf_type = config_entry.data[CONF_TYPE]
 
     if DATA_BEOPLAY not in hass.data:
         hass.data[DATA_BEOPLAY] = BeoPlayData()
 
-    await _add_player(hass, async_add_entities, api, type)
+    await _add_player(hass, async_add_entities, beoplay_api, conf_type)
 
 
 class BeoPlay(MediaPlayerEntity):
-    """Representation of a BeoPlay speaker"""
+    """Representation of a BeoPlay speaker."""
 
-    def __init__(self, hass: HomeAssistant, api: pybeoplay.BeoPlay, type ) -> None:
+    def __init__(self, hass: HomeAssistant, api: pybeoplay.BeoPlay, type) -> None:
+        """Initialize the BeoPlay speaker."""
         self._hass = hass
         self._polling_task = None  # The actual polling task.
         self._first_run = True
@@ -230,10 +244,11 @@ class BeoPlay(MediaPlayerEntity):
         self._beoplay_type = type
 
     async def async_added_to_hass(self):
+        """Register entity."""
         self.hass.data[DATA_BEOPLAY].entities.append(self)
 
-    # device is going to be removed, so stop polling the notifications
     async def async_will_remove_from_hass(self):
+        """Device is going to be removed, so stop polling the notifications."""
         self.stop_polling()
         self.hass.data[DATA_BEOPLAY].entities.remove(self)
 
@@ -259,14 +274,16 @@ class BeoPlay(MediaPlayerEntity):
 
     def start_polling(self):
         """Start the polling task."""
-        self._polling_task = self._hass.async_create_background_task(self._start_poll_command(), BEOPLAY_POLL_TASK )
+        self._polling_task = self._hass.async_create_background_task(
+            self._start_poll_command(), BEOPLAY_POLL_TASK
+        )
 
     def stop_polling(self):
         """Stop the polling task."""
         self._polling_task.cancel()
 
     async def async_update_status(self):
-        """Long polling task"""
+        """Long polling task."""
 
         def notif_callback(data: dict):
             self._on = self._speaker.on
@@ -304,10 +321,12 @@ class BeoPlay(MediaPlayerEntity):
 
     @property
     def unique_id(self):
+        """Return the unique ID of the device."""
         return self._unique_id
 
     @property
     def device_info(self) -> DeviceInfo:
+        """Return device information."""
         return DeviceInfo(
             name=self._name,
             manufacturer="Bang & Olufsen",
@@ -335,13 +354,13 @@ class BeoPlay(MediaPlayerEntity):
             return STATE_OFF
         if self._state is None:
             return None
-        else:
-            if self._state == "play" or self._state == "playing":
-                return STATE_PLAYING
-            if self._state == "pause":
-                return STATE_PAUSED
-            if self._state == "stop":
-                return STATE_PAUSED
+
+        if self._state in ("play", "playing"):
+            return STATE_PLAYING
+        if self._state == "pause":
+            return STATE_PAUSED
+        if self._state == "stop":
+            return STATE_PAUSED
         if self._on:
             return STATE_ON
         return STATE_UNKNOWN
@@ -386,7 +405,9 @@ class BeoPlay(MediaPlayerEntity):
         """Image url of current playing media."""
         if self._speaker.media_url:
             if self._speaker.source == "AirPlay":
-                media_url_params = urllib.parse.urlencode({'track': self._speaker.media_track})
+                media_url_params = urllib.parse.urlencode(
+                    {"track": self._speaker.media_track}
+                )
                 return f"{self._speaker.media_url}?{media_url_params}"
             return self._speaker.media_url
         return None
@@ -430,11 +451,11 @@ class BeoPlay(MediaPlayerEntity):
         self._speaker.Standby()
 
     def media_play(self):
-        """Play the current music"""
+        """Play the current music."""
         self._speaker.Play()
 
     def media_pause(self):
-        """Pause the current music"""
+        """Pause the current music."""
         self._speaker.Pause()
 
     def media_stop(self):
@@ -443,14 +464,14 @@ class BeoPlay(MediaPlayerEntity):
 
     def media_previous_track(self):
         """Send previous track command. Will use the type of command appropriate for the device, based on the configuration."""
-        if (self._beoplay_type == BEOPLAY_CHANNEL):
+        if self._beoplay_type == BEOPLAY_CHANNEL:
             self._speaker.StepDown()
         else:
             self._speaker.Backward()
 
     def media_next_track(self):
         """Send next track command."""
-        if (self._beoplay_type == BEOPLAY_CHANNEL):
+        if self._beoplay_type == BEOPLAY_CHANNEL:
             self._speaker.StepUp()
         else:
             self._speaker.Forward()
@@ -468,7 +489,7 @@ class BeoPlay(MediaPlayerEntity):
         self._speaker.setVolume(volume)
 
     def mute_volume(self, mute):
-        """Send mute command"""
+        """Send mute command."""
         self._speaker.setMute(mute)
 
     def select_sound_mode(self, sound_mode):
@@ -480,15 +501,15 @@ class BeoPlay(MediaPlayerEntity):
         self._speaker.setSource(source)
 
     def join_experience(self):
-        """Join on ongoing experience"""
+        """Join on ongoing experience."""
         self._speaker.joinExperience()
 
     def leave_experience(self):
-        """Leave experience"""
+        """Leave experience."""
         self._speaker.leaveExperience()
 
     def add_media(self, url):
-        """Leave experience"""
+        """Leave experience."""
         item = {
             "playQueueItem": {"behaviour": "impulsive", "track": {"dlna": {"url": url}}}
         }
@@ -519,7 +540,7 @@ class BeoPlay(MediaPlayerEntity):
             except (ClientError, ClientConnectorError):
                 _LOGGER.error(
                     "Couldn't connect with %s (maybe Wake-On-Lan / Quickstart is disabled?)",
-                    self._speaker._host,
+                    self._speaker.host,
                 )
                 return
         try:
