@@ -4,25 +4,37 @@ beoplay_join_experience:
   fields:
     entity_id:
       name: "B&O Media player"
-      description: "A media player Entity ID."
-      example: "media_player.my_chromecast"
+      description: "A beoplay Entity ID."
+      example: "media_player.my_beo_device"
 beoplay_leave_experience:
   name: "Leave Experience"
   description: "Leave the current playback experience."
   fields:
     entity_id:
       name: "B&O Media player"
-      description: "A media player Entity ID."
-      example: "media_player.my_chromecast"
+      description: "A beoplay Entity ID."
+      example: "media_player.my_beo_device"
 beoplay_add_media_to_queue:
   name: "Add to playback Queue"
   description: "Add media to the current playback queue. This is untested. Please report back if it works."
   fields:
     entity_id:
       name: "B&O Media player"
-      description: "A media player Entity ID."
-      example: "media_player.my_beosound"
+      description: "A beoplay Entity ID."
+      example: "media_player.my_beo_device"
     url:
       name: "Media URL"
       description: "A URL to add to the playback queue. Must be reachable from the speaker."
       example: "http://192.168.1.1/DLNAfile.mp3"
+beoplay_set_stand_position:
+  name: "Set Stand Position"
+  description: "Set the B&O TV stand position."
+  fields:
+    entity_id:
+      name: "B&O Media player"
+      description: "A beoplay Entity ID."
+      example: "media_player.my_beo_device"
+    id:
+      name: "Stand position"
+      description: "The stand position name, as configured on the TV."
+      example: "Start-up"

@@ -70,6 +70,11 @@ beoplay.beoplay_add_media_to_queue:
 ```
 This command is experimental. It allows to add a URL of a DLNA asset on your network to the speaker and play it. Let me know if it works for you!
 
+```
+beoplay.beoplay_set_stand_position:
+```
+This command is experimental. It allows to set the stand position of the TV. This would be the same name you have in your TV configuration, e.g. "StandBy" or "Start-Up".
+
 These are called through service calls, e.g.:
 
 ![image](https://user-images.githubusercontent.com/60585229/211130163-81149354-1f41-4ae1-bbd3-1b91bfdcb812.png)

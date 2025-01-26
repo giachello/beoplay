@@ -1,4 +1,5 @@
 """Support for Bang & Olufsen BeoPlay speakers for Home Assistant.
+
 This file provides a Media Player interface to Bang & Olufsen devices using the BeoPlay interface.
 
 Key features:
@@ -28,6 +29,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_ID,
     CONF_URL,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
@@ -85,6 +87,7 @@ DATA_BEOPLAY = "beoplay_media_player"
 BEOPLAY_EXPERIENCE_JOIN_SERVICE = "beoplay_join_experience"
 BEOPLAY_EXPERIENCE_LEAVE_SERVICE = "beoplay_leave_experience"
 BEOPLAY_ADD_MEDIA_SERVICE = "beoplay_add_media_to_queue"
+BEOPLAY_SET_STAND_POSITION = "beoplay_set_stand_position"
 
 EXPERIENCE_SCHEMA = vol.Schema(
     {
@@ -96,6 +99,13 @@ ADD_MEDIA_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
         vol.Required(CONF_URL): cv.url,
+    }
+)
+
+SET_STAND_POSITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(CONF_ID): cv.string,
     }
 )
 
@@ -152,6 +162,18 @@ async def _add_player(
         for entity in entities:
             entity.add_media(url)
 
+    def set_stand_positions(service: ServiceDataType):
+        """Join to an existing experience."""
+        _LOGGER.debug("Get Positions service called")
+        entity_ids = service.data.get("entity_id")
+        id = service.data.get("id")
+        entities = hass.data[DATA_BEOPLAY].entities
+
+        if entity_ids:
+            entities = [e for e in entities if e.entity_id in entity_ids]
+        for entity in entities:
+            entity.set_stand_position(id)
+
     # the callbacks for starting / stopping the polling (Notifications) task
     @callback
     def _start_polling(event=None):
@@ -181,6 +203,13 @@ async def _add_player(
         BEOPLAY_ADD_MEDIA_SERVICE,
         add_media,
         schema=ADD_MEDIA_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        BEOPLAY_SET_STAND_POSITION,
+        set_stand_positions,
+        schema=SET_STAND_POSITION_SCHEMA,
     )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
@@ -440,6 +469,14 @@ class BeoPlay(MediaPlayerEntity):
         """Name of the current running app."""
         return self.source
 
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes (stand positions)."""
+        attributes = {}
+        attributes["stand_positions"] = self._speaker.standPositions
+        attributes["stand_position"] = self._speaker.standPosition
+        return attributes
+
     # ========== Service Calls ==========
 
     def turn_on(self):
@@ -515,6 +552,10 @@ class BeoPlay(MediaPlayerEntity):
         }
         self._speaker.playQueueItem(False, item)
 
+    def set_stand_position(self, id):
+        """Set the stand position."""
+        self._speaker.setStandPosition(id)
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data and update device state."""
@@ -536,6 +577,8 @@ class BeoPlay(MediaPlayerEntity):
                 )
                 await self._speaker.async_get_sources()
                 await self._speaker.async_get_sound_modes()
+                await self._speaker.async_get_stand_positions()
+                await self._speaker.async_get_stand_position()
                 self._first_run = False
             except (ClientError, ClientConnectorError):
                 _LOGGER.error(
