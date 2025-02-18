@@ -16,7 +16,7 @@ from datetime import timedelta
 import logging
 import urllib.parse
 
-from aiohttp import ClientConnectorError, ClientError, ServerDisconnectedError
+from aiohttp import ClientError
 import pybeoplay
 import voluptuous as vol
 
@@ -325,7 +325,7 @@ class BeoPlay(MediaPlayerEntity):
 
         try:
             await self._speaker.async_notificationsTask(notif_callback)
-        except (asyncio.TimeoutError, ClientError, ClientConnectorError) as _e:
+        except (TimeoutError, ClientError) as _e:
             # occasionally the notifications stream is closed by the speaker/TV
             # In that case, exit and restart the polling
             # Don't update if we haven't initialized yet.
@@ -580,7 +580,7 @@ class BeoPlay(MediaPlayerEntity):
                 await self._speaker.async_get_stand_positions()
                 await self._speaker.async_get_stand_position()
                 self._first_run = False
-            except (ClientError, ClientConnectorError):
+            except ClientError:
                 _LOGGER.error(
                     "Couldn't connect with %s (maybe Wake-On-Lan / Quickstart is disabled?)",
                     self._speaker.host,
@@ -591,5 +591,5 @@ class BeoPlay(MediaPlayerEntity):
             if self._on != self._speaker.on:
                 self._on = self._speaker.on
                 _LOGGER.debug("Updating ON state: %s", self._on)
-        except (ServerDisconnectedError, ClientConnectorError):
+        except ClientError:
             _LOGGER.debug("Server disconnected, ignoring")
