@@ -12,9 +12,9 @@
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/giachello/beoplay/issues",
   "requirements": [
-    "pybeoplay==2.7.0"
+    "pybeoplay==2.7.1"
   ],
   "ssdp": [],
-  "version": "2025.2.1",
+  "version": "2025.2.2",
   "zeroconf": ["_beoremote._tcp.local."]
 }
