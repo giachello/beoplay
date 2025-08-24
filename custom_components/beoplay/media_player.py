@@ -553,7 +553,11 @@ class BeoPlay(MediaPlayerEntity):
 
     def join_players(self, group_members):
         """Join `group_members` as a player group with the current player."""
-        self._speaker.joinExperience()
+        entities = self.hass.data[DATA_BEOPLAY].entities
+
+        entities = [e for e in entities if e.entity_id in group_members]
+        for entity in entities:
+            entity.join_experience()
 
     def leave_experience(self):
         """Leave experience."""
