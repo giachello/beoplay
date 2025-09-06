@@ -53,17 +53,7 @@ See below for an example:
 
 The integration is a Media Player so responds to all Media Player commands.
 
-It also exposes 3 additional services:
-
-```
-beoplay.beoplay_join_experience:
-```
-This command joins the speaker to the current play experience, just like pressing the 'Join' button on the remote. A source must be playing already for Join to work.
-
-```
-beoplay.beoplay_leave_experience:
-```
-This command makes the speaker quit the current experience, and turn off.
+It also exposes 2 additional services:
 
 ```
 beoplay.beoplay_add_media_to_queue:
@@ -79,6 +69,7 @@ These are called through service calls, e.g.:
 
 ![image](https://user-images.githubusercontent.com/60585229/211130163-81149354-1f41-4ae1-bbd3-1b91bfdcb812.png)
 
+Note: the beoplay_join_experience and beoplay_leave_experience services are deprecated, since home assistant Media Player has now official service calls for the same functionality. I will remove them in an upcoming release.
 
 ## Events
 

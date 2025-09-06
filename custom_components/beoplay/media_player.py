@@ -20,8 +20,8 @@ from aiohttp import ClientError
 import pybeoplay
 import voluptuous as vol
 
-from homeassistant.components.media_player import (
-    MediaPlayerEntity,
+from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player.const import (
     MediaPlayerEntityFeature,
     MediaType,
     RepeatMode,
@@ -39,11 +39,12 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, ServiceCall, ServiceResponse
 
 # from homeassistant.helpers.script import Script
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
+from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ServiceDataType
 
 # from homeassistant.helpers.event import async_track_time_interval
@@ -130,7 +131,7 @@ async def _add_player(
     """Add speakers."""
 
     # the callbacks for the services
-    def join_experience(service: ServiceDataType):
+    async def join_experience(service: ServiceCall) -> ServiceResponse:
         """Join to an existing experience."""
         _LOGGER.debug("Join experience service called")
         entity_ids = service.data.get("entity_id")
@@ -141,7 +142,7 @@ async def _add_player(
         for entity in entities:
             entity.join_experience()
 
-    def leave_experience(service: ServiceDataType):
+    async def leave_experience(service: ServiceCall) -> ServiceResponse:
         """Leave an existing experience."""
         _LOGGER.debug("Leave experience service called")
         entity_ids = service.data.get("entity_id")
@@ -152,7 +153,7 @@ async def _add_player(
         for entity in entities:
             entity.leave_experience()
 
-    def add_media(service: ServiceDataType):
+    async def add_media(service: ServiceCall) -> ServiceResponse:
         """Leave an existing experience."""
         _LOGGER.debug("Add Media to Queue service called")
         entity_ids = service.data.get("entity_id")
@@ -164,7 +165,7 @@ async def _add_player(
         for entity in entities:
             entity.add_media(url)
 
-    def set_stand_positions(service: ServiceDataType):
+    async def set_stand_positions(service: ServiceCall) -> ServiceResponse:
         """Join to an existing experience."""
         _LOGGER.debug("Get Positions service called")
         entity_ids = service.data.get("entity_id")
@@ -312,7 +313,7 @@ class BeoPlay(MediaPlayerEntity):
 
     def stop_polling(self):
         """Stop the polling task."""
-        self._polling_task.cancel()
+        if self._polling_task is not None: self._polling_task.cancel()
 
     async def async_update_status(self):
         """Long polling task."""
@@ -362,7 +363,7 @@ class BeoPlay(MediaPlayerEntity):
         return DeviceInfo(
             name=self._name,
             manufacturer="Bang & Olufsen",
-            identifiers={(DOMAIN, self._serial_number)},
+            identifiers={(DOMAIN, self._serial_number if self._serial_number else "unknown")},
             model=f"{self._type_number} {self._type_name}",
             hw_version=self._hw_version,
             sw_version=self._sw_version,

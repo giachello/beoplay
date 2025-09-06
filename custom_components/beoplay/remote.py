@@ -13,7 +13,8 @@ from homeassistant.components.remote import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
+from homeassistant.helpers.entity import  generate_entity_id
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, CONF_BEOPLAY_API

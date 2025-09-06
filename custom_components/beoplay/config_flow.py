@@ -105,6 +105,10 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Async_Step_Zeroconf Hostname %s", self.host)
 
         self.beoplayapi = beoplay.BeoPlay(self.host, async_get_clientsession(self.hass))
+        if self.beoplayapi is None:
+            _LOGGER.debug("Could not create BeoPlay API for %s", str(self.host))
+            return self.async_abort(reason="cannot_connect")
+        
         try:
             await self.beoplayapi.async_get_device_info()
         except ClientError:
@@ -143,8 +147,8 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    "serial_number": self.beoplayapi.serialNumber,
-                    "model": self.beoplayapi.name,
+                    "serial_number": self.beoplayapi.serialNumber if self.beoplayapi.serialNumber else "unknown",
+                    "model": self.beoplayapi.name if self.beoplayapi.name else "unknown",
                 }
             }
         )
@@ -153,9 +157,11 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf_confirm(self, user_input=None):
         """Handle a flow initiated by zeroconf."""
 
-        _sn = self.beoplayapi.serialNumber
-        _tn = self.beoplayapi.typeNumber
-        _name = self.beoplayapi.name
+        if self.beoplayapi is None:
+            return self.async_abort(reason="cannot_connect")
+        _sn : str = self.beoplayapi.serialNumber if self.beoplayapi.serialNumber else "unknown"
+        _tn : str = self.beoplayapi.typeNumber if self.beoplayapi.typeNumber else "unknown"
+        _name : str = self.beoplayapi.name if self.beoplayapi.name else "unknown"
         _LOGGER.debug("zeroconf_confirm: %s", _name)
 
         if user_input is not None:

@@ -6,7 +6,8 @@ from aiohttp import ClientConnectorError, ClientError
 import pybeoplay
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
