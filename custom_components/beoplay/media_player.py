@@ -80,6 +80,7 @@ SUPPORT_BEOPLAY = (
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.SELECT_SOUND_MODE
+    | MediaPlayerEntityFeature.GROUPING
 )
 
 DATA_BEOPLAY = "beoplay_media_player"
@@ -112,6 +113,7 @@ SET_STAND_POSITION_SCHEMA = vol.Schema(
 BEOPLAY_POLL_TASK = "BeoPlay Poll Task"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+JID_FORMAT = "{}.{}.{}@products.bang-olufsen.com"
 
 
 class BeoPlayData:
@@ -266,6 +268,7 @@ class BeoPlay(MediaPlayerEntity):
         self._type_name = ""
         self._hw_version = ""
         self._sw_version = ""
+        self._jid = ""
         self._item_number = ""
         self._unique_id = ""
         self._on = self._speaker.on
@@ -364,6 +367,13 @@ class BeoPlay(MediaPlayerEntity):
             hw_version=self._hw_version,
             sw_version=self._sw_version,
         )
+    
+    @property
+    def group_members(self):
+        """Return the group members."""
+        entities = self.hass.data[DATA_BEOPLAY].entities
+        listeners = self._speaker.listeners if hasattr(self._speaker, 'listeners') else []
+        return [entity.entity_id for entity in entities if entity._jid in listeners]
 
     @property
     def should_poll(self):
@@ -541,8 +551,20 @@ class BeoPlay(MediaPlayerEntity):
         """Join on ongoing experience."""
         self._speaker.joinExperience()
 
+    def join_players(self, group_members):
+        """Join `group_members` as a player group with the current player."""
+        entities = self.hass.data[DATA_BEOPLAY].entities
+
+        entities = [e for e in entities if e.entity_id in group_members]
+        for entity in entities:
+            entity.join_experience()
+
     def leave_experience(self):
         """Leave experience."""
+        self._speaker.leaveExperience()
+
+    def unjoin_player(self):
+        """Unjoin the current player from the experience."""
         self._speaker.leaveExperience()
 
     def add_media(self, url):
@@ -571,6 +593,11 @@ class BeoPlay(MediaPlayerEntity):
                 self._type_name = self._speaker.typeName
                 self._hw_version = self._speaker.hardwareVersion
                 self._sw_version = self._speaker.softwareVersion
+                self._jid = JID_FORMAT.format(
+                    self._speaker.typeNumber,
+                    self._speaker.itemNumber,
+                    self._speaker.serialNumber
+                )
                 self._unique_id = f"beoplay-{self._serial_number}-media_player"
                 self.entity_id = generate_entity_id(
                     ENTITY_ID_FORMAT, self._name, hass=self._hass
