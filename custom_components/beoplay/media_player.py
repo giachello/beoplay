@@ -20,8 +20,8 @@ from aiohttp import ClientError
 import pybeoplay
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaType,
     RepeatMode,
@@ -39,13 +39,12 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback, ServiceCall, ServiceResponse
+from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, callback
 
 # from homeassistant.helpers.script import Script
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.typing import ServiceDataType
+from homeassistant.helpers.entity import generate_entity_id
 
 # from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
@@ -140,7 +139,7 @@ async def _add_player(
         if entity_ids:
             entities = [e for e in entities if e.entity_id in entity_ids]
         for entity in entities:
-            entity.join_experience()
+            await entity.async_join_experience()
 
     async def leave_experience(service: ServiceCall) -> ServiceResponse:
         """Leave an existing experience."""
@@ -151,7 +150,7 @@ async def _add_player(
         if entity_ids:
             entities = [e for e in entities if e.entity_id in entity_ids]
         for entity in entities:
-            entity.leave_experience()
+            await entity.async_leave_experience()
 
     async def add_media(service: ServiceCall) -> ServiceResponse:
         """Leave an existing experience."""
@@ -163,19 +162,19 @@ async def _add_player(
         if entity_ids:
             entities = [e for e in entities if e.entity_id in entity_ids]
         for entity in entities:
-            entity.add_media(url)
+            await entity.async_add_media(url)
 
     async def set_stand_positions(service: ServiceCall) -> ServiceResponse:
         """Join to an existing experience."""
         _LOGGER.debug("Get Positions service called")
         entity_ids = service.data.get("entity_id")
-        id = service.data.get("id")
+        stand_position_id = service.data.get("id")
         entities = hass.data[DATA_BEOPLAY].entities
 
         if entity_ids:
             entities = [e for e in entities if e.entity_id in entity_ids]
         for entity in entities:
-            entity.set_stand_position(id)
+            await entity.async_set_stand_position(stand_position_id)
 
     # the callbacks for starting / stopping the polling (Notifications) task
     @callback
@@ -313,7 +312,8 @@ class BeoPlay(MediaPlayerEntity):
 
     def stop_polling(self):
         """Stop the polling task."""
-        if self._polling_task is not None: self._polling_task.cancel()
+        if self._polling_task is not None:
+            self._polling_task.cancel()
 
     async def async_update_status(self):
         """Long polling task."""
@@ -363,24 +363,33 @@ class BeoPlay(MediaPlayerEntity):
         return DeviceInfo(
             name=self._name,
             manufacturer="Bang & Olufsen",
-            identifiers={(DOMAIN, self._serial_number if self._serial_number else "unknown")},
+            identifiers={
+                (DOMAIN, self._serial_number if self._serial_number else "unknown")
+            },
             model=f"{self._type_number} {self._type_name}",
             hw_version=self._hw_version,
             sw_version=self._sw_version,
         )
-    
+
     @property
     def group_members(self):
         """Return the group members."""
         entities = self.hass.data[DATA_BEOPLAY].entities
-        listeners = self._speaker.listeners if hasattr(self._speaker, 'listeners') else []
-        return [entity.entity_id for entity in entities if entity._jid in listeners]
+        listeners = (
+            self._speaker.listeners if hasattr(self._speaker, "listeners") else []
+        )
+        return [entity.entity_id for entity in entities if entity.jid in listeners]
 
     @property
     def should_poll(self):
         """Device should be polled."""
         # using this polling for the power state
         return True
+
+    @property
+    def jid(self):
+        """Return the JID of the device."""
+        return self._jid
 
     @property
     def supported_features(self):
@@ -552,6 +561,10 @@ class BeoPlay(MediaPlayerEntity):
         """Join on ongoing experience."""
         self._speaker.joinExperience()
 
+    async def async_join_experience(self):
+        """Join on ongoing experience."""
+        await self._speaker.async_join_experience()
+
     def join_players(self, group_members):
         """Join `group_members` as a player group with the current player."""
         entities = self.hass.data[DATA_BEOPLAY].entities
@@ -564,9 +577,13 @@ class BeoPlay(MediaPlayerEntity):
         """Leave experience."""
         self._speaker.leaveExperience()
 
+    async def async_leave_experience(self):
+        """Leave experience."""
+        await self._speaker.async_leave_experience()
+
     def unjoin_player(self):
         """Unjoin the current player from the experience."""
-        self._speaker.leaveExperience()
+        self.leave_experience()
 
     def add_media(self, url):
         """Leave experience."""
@@ -575,9 +592,20 @@ class BeoPlay(MediaPlayerEntity):
         }
         self._speaker.playQueueItem(False, item)
 
+    async def async_add_media(self, url):
+        """Leave experience."""
+        item = {
+            "playQueueItem": {"behaviour": "impulsive", "track": {"dlna": {"url": url}}}
+        }
+        await self._speaker.async_play_queue_item(False, item)
+
     def set_stand_position(self, id):
         """Set the stand position."""
         self._speaker.setStandPosition(id)
+
+    async def async_set_stand_position(self, id):
+        """Set the stand position."""
+        await self._speaker.async_set_stand_position(id)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
@@ -597,7 +625,7 @@ class BeoPlay(MediaPlayerEntity):
                 self._jid = JID_FORMAT.format(
                     self._speaker.typeNumber,
                     self._speaker.itemNumber,
-                    self._speaker.serialNumber
+                    self._speaker.serialNumber,
                 )
                 self._unique_id = f"beoplay-{self._serial_number}-media_player"
                 self.entity_id = generate_entity_id(

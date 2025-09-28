@@ -49,11 +49,21 @@ See below for an example:
 ![image](https://user-images.githubusercontent.com/60585229/232346866-6d185bb5-eedd-4ee2-9a88-79d38a0a2f41.png)
 
 
-## Services
+## Actions
 
-The integration is a Media Player so responds to all Media Player commands.
+The integration is a Media Player so responds to all Media Player actions.
 
-It also exposes 2 additional services:
+It also exposes 4 additional Actions:
+
+```
+beoplay.beoplay_join_experience:
+```
+This command joins the speaker to the current play experience, just like pressing the 'Join' button on the remote. A source must be playing already for Join to work. This Action works across B&O plugins (Mozart, Beoplay and MLGW), unlike the Home Assistant native Join service which only can connect experiences Mozart<>Mozart and Beoplay<>Beoplay.
+
+```
+beoplay.beoplay_leave_experience:
+```
+This command makes the speaker to disconnect from the current experience, and turn off.
 
 ```
 beoplay.beoplay_add_media_to_queue:
@@ -69,7 +79,6 @@ These are called through service calls, e.g.:
 
 ![image](https://user-images.githubusercontent.com/60585229/211130163-81149354-1f41-4ae1-bbd3-1b91bfdcb812.png)
 
-Note: the beoplay_join_experience and beoplay_leave_experience services are deprecated, since home assistant Media Player has now official service calls for the same functionality. I will remove them in an upcoming release.
 
 ## Events
 
