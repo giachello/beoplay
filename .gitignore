@@ -1,3 +1,6 @@
+#vscode
+.vscode/
+
 # Home Assistant configuration
 config/*
 !config/configuration.yaml
