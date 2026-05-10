@@ -7,7 +7,7 @@ This component enables integration of B&O Audio/Video equipment with Home Assist
 
 ## Minimum Home Assistant version
 
-MLGW is compatible with any version since 2021.1.1
+BeoPlay is compatible with any version since 2021.1.1
 
 ## Setup
 

@@ -44,7 +44,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse, call
 # from homeassistant.helpers.script import Script
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import generate_entity_id
 
 # from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
@@ -112,7 +111,6 @@ SET_STAND_POSITION_SCHEMA = vol.Schema(
 
 BEOPLAY_POLL_TASK = "BeoPlay Poll Task"
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 JID_FORMAT = "{}.{}.{}@products.bang-olufsen.com"
 
 
@@ -628,9 +626,6 @@ class BeoPlay(MediaPlayerEntity):
                     self._speaker.serialNumber,
                 )
                 self._unique_id = f"beoplay-{self._serial_number}-media_player"
-                self.entity_id = generate_entity_id(
-                    ENTITY_ID_FORMAT, self._name, hass=self._hass
-                )
                 await self._speaker.async_get_sources()
                 await self._speaker.async_get_sound_modes()
                 await self._speaker.async_get_stand_positions()

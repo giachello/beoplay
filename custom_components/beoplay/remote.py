@@ -13,7 +13,6 @@ from homeassistant.components.remote import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import  generate_entity_id
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -22,7 +21,6 @@ from .const import DOMAIN, CONF_BEOPLAY_API
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 
 async def async_setup_entry(
@@ -50,8 +48,6 @@ class BeoPlayRemote(RemoteEntity):
         self._hass = hass
         self._attr_name = name
         self._name = name
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass )
-        _LOGGER.info("Entity_id: %s", self.entity_id)
 
         self._attr_unique_id = identifier
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, identifier)})
