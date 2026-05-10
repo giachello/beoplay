@@ -81,7 +81,12 @@ class BeoPlayConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="single_instance_allowed")
 
         return self.async_show_form(
-            step_id="user", data_schema=USER_STEP_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=USER_STEP_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "github_url": "https://github.com/giachello/beoplay",
+            },
         )
 
     async def async_step_zeroconf(self, discovery_info):

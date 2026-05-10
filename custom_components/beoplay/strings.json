@@ -9,7 +9,7 @@
     "flow_title": "BeoPlay Device: {model} {serial_number}",
     "step": {
       "user": {
-        "description": "Set up BeoPlay device. If you have problems with configuration go to: https://github.com/giachello/beoplay",
+        "description": "Set up BeoPlay device. If you have problems with configuration go to: {github_url}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "type": "Select Next/Previous action (StepUp/Down for older devices, Forward/Backward for newer)"
