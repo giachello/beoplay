@@ -4,7 +4,7 @@
   "codeowners": [
     "@giachello"
   ],
-  "categories": [ "media_entertainment.speakers_audio" ],
+  "categories": [ "media_entertainment" ],
   "config_flow": true,
   "dependencies": ["http", "zeroconf"],
   "documentation": "https://github.com/giachello/beoplay",
