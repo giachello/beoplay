@@ -84,6 +84,10 @@ class BeoPlayRemote(RemoteEntity):
                     _LOGGER.info("Sending digit %s", single_command)
                     await self.api.async_digits(single_command)
                     await asyncio.sleep(delay)
+                elif single_command in self.api.oneway_commands:
+                    _LOGGER.info("Sending oneway command %s", single_command)
+                    await self.api.async_oneway_command(single_command)
+                    await asyncio.sleep(delay)
                 else:
                     raise ValueError(f"Command '{single_command}' not found. Ending.")
 
