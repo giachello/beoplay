@@ -16,6 +16,6 @@
     "pybeoplay==2.9.1"
   ],
   "ssdp": [],
-  "version": "2026.10.10",
+  "version": "2026.10.11",
   "zeroconf": ["_beoremote._tcp.local."]
 }
