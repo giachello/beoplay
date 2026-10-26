@@ -4,7 +4,6 @@
   "codeowners": [
     "@giachello"
   ],
-  "categories": [  ],
   "config_flow": true,
   "dependencies": ["http", "zeroconf"],
   "documentation": "https://github.com/giachello/beoplay",
