@@ -496,99 +496,87 @@ class BeoPlay(MediaPlayerEntity):
         return attributes
 
     # ========== Service Calls ==========
+    # These use the async pybeoplay calls, which go through Home Assistant's
+    # aiohttp session. The blocking (requests based) calls cannot resolve
+    # the zeroconf ".local" host names inside the Home Assistant container.
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn on the device."""
-        self._speaker.turnOn()
+        await self._speaker.async_turn_on()
 
-    def turn_off(self):
+    async def async_turn_off(self):
         """Turn off the device."""
-        self._speaker.Standby()
+        await self._speaker.async_standby()
 
-    def media_play(self):
+    async def async_media_play(self):
         """Play the current music."""
-        self._speaker.Play()
+        await self._speaker.async_play()
 
-    def media_pause(self):
+    async def async_media_pause(self):
         """Pause the current music."""
-        self._speaker.Pause()
+        await self._speaker.async_pause()
 
-    def media_stop(self):
+    async def async_media_stop(self):
         """Send stop command."""
-        self._speaker.Stop()
+        await self._speaker.async_stop()
 
-    def media_previous_track(self):
+    async def async_media_previous_track(self):
         """Send previous track command. Will use the type of command appropriate for the device, based on the configuration."""
         if self._beoplay_type == BEOPLAY_CHANNEL:
-            self._speaker.StepDown()
+            await self._speaker.async_stepdown()
         else:
-            self._speaker.Backward()
+            await self._speaker.async_backward()
 
-    def media_next_track(self):
+    async def async_media_next_track(self):
         """Send next track command."""
         if self._beoplay_type == BEOPLAY_CHANNEL:
-            self._speaker.StepUp()
+            await self._speaker.async_stepup()
         else:
-            self._speaker.Forward()
+            await self._speaker.async_forward()
 
-    def set_shuffle(self, shuffle: bool) -> None:
-        """Send previous track command."""
-        self._speaker.Shuffle()
+    async def async_set_shuffle(self, shuffle: bool) -> None:
+        """Send shuffle command."""
+        await self._speaker.async_shuffle()
 
-    def set_repeat(self, repeat: RepeatMode) -> None:
-        """Send next track command."""
-        self._speaker.Repeat()
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        """Send repeat command."""
+        await self._speaker.async_repeat()
 
-    def set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        self._speaker.setVolume(volume)
+        await self._speaker.async_set_volume(volume)
 
-    def mute_volume(self, mute):
+    async def async_mute_volume(self, mute):
         """Send mute command."""
-        self._speaker.setMute(mute)
+        await self._speaker.async_set_mute(mute)
 
-    def select_sound_mode(self, sound_mode):
+    async def async_select_sound_mode(self, sound_mode):
         """Select sound mode."""
-        self._speaker.setSoundMode(sound_mode)
+        await self._speaker.async_set_sound_mode(sound_mode)
 
-    def select_source(self, source):
+    async def async_select_source(self, source):
         """Select input source."""
-        self._speaker.setSource(source)
-
-    def join_experience(self):
-        """Join on ongoing experience."""
-        self._speaker.joinExperience()
+        await self._speaker.async_set_source(source)
 
     async def async_join_experience(self):
         """Join on ongoing experience."""
         await self._speaker.async_join_experience()
 
-    def join_players(self, group_members):
+    async def async_join_players(self, group_members):
         """Join `group_members` as a player group with the current player."""
         entities = self.hass.data[DATA_BEOPLAY].entities
 
         entities = [e for e in entities if e.entity_id in group_members]
         for entity in entities:
-            entity.join_experience()
-
-    def leave_experience(self):
-        """Leave experience."""
-        self._speaker.leaveExperience()
+            await entity.async_join_experience()
 
     async def async_leave_experience(self):
         """Leave experience."""
         await self._speaker.async_leave_experience()
 
-    def unjoin_player(self):
+    async def async_unjoin_player(self):
         """Unjoin the current player from the experience."""
-        self.leave_experience()
-
-    def add_media(self, url):
-        """Leave experience."""
-        item = {
-            "playQueueItem": {"behaviour": "impulsive", "track": {"dlna": {"url": url}}}
-        }
-        self._speaker.playQueueItem(False, item)
+        await self.async_leave_experience()
 
     async def async_add_media(self, url):
         """Leave experience."""
@@ -596,10 +584,6 @@ class BeoPlay(MediaPlayerEntity):
             "playQueueItem": {"behaviour": "impulsive", "track": {"dlna": {"url": url}}}
         }
         await self._speaker.async_play_queue_item(False, item)
-
-    def set_stand_position(self, id):
-        """Set the stand position."""
-        self._speaker.setStandPosition(id)
 
     async def async_set_stand_position(self, id):
         """Set the stand position."""
