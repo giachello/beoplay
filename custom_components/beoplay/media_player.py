@@ -123,7 +123,7 @@ class BeoPlayData:
 
 
 async def _add_player(
-    hass: HomeAssistant, async_add_devices, api: pybeoplay.BeoPlay, type
+    hass: HomeAssistant, async_add_devices, api: pybeoplay.BeoPlay, beoplay_type
 ):
     """Add speakers."""
 
@@ -176,12 +176,12 @@ async def _add_player(
 
     # the callbacks for starting / stopping the polling (Notifications) task
     @callback
-    def _start_polling(event=None):
+    def _start_polling():
         """Start polling."""
         speaker.start_polling()
 
     @callback
-    def _stop_polling(event=None):
+    def _stop_polling():
         """Stop polling."""
         speaker.stop_polling()
 
@@ -214,7 +214,7 @@ async def _add_player(
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
 
-    speaker = BeoPlay(hass, api, type)
+    speaker = BeoPlay(hass, api, beoplay_type)
     await speaker.async_update()
     # Only add the device if it responded with its serial number.
     # Device must be on. This avoids the creation of spurious devices.
@@ -251,7 +251,7 @@ async def async_setup_entry(
 class BeoPlay(MediaPlayerEntity):
     """Representation of a BeoPlay speaker."""
 
-    def __init__(self, hass: HomeAssistant, api: pybeoplay.BeoPlay, type) -> None:
+    def __init__(self, hass: HomeAssistant, api: pybeoplay.BeoPlay, beoplay_type) -> None:
         """Initialize the BeoPlay speaker."""
         self._hass = hass
         self._polling_task = None  # The actual polling task.
@@ -271,7 +271,7 @@ class BeoPlay(MediaPlayerEntity):
         self._unique_id = ""
         self._on = self._speaker.on
         self._state = self._speaker.state
-        self._beoplay_type = type
+        self._beoplay_type = beoplay_type
 
     async def async_added_to_hass(self):
         """Register entity."""
@@ -521,7 +521,8 @@ class BeoPlay(MediaPlayerEntity):
         await self._speaker.async_stop()
 
     async def async_media_previous_track(self):
-        """Send previous track command. Will use the type of command appropriate for the device, based on the configuration."""
+        """Send previous track command. Will use the type of command appropriate for the device, 
+        based on the configuration."""
         if self._beoplay_type == BEOPLAY_CHANNEL:
             await self._speaker.async_stepdown()
         else:
@@ -585,9 +586,9 @@ class BeoPlay(MediaPlayerEntity):
         }
         await self._speaker.async_play_queue_item(False, item)
 
-    async def async_set_stand_position(self, id):
+    async def async_set_stand_position(self, stand_position_id):
         """Set the stand position."""
-        await self._speaker.async_set_stand_position(id)
+        await self._speaker.async_set_stand_position(stand_position_id)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
