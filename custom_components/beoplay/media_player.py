@@ -176,12 +176,12 @@ async def _add_player(
 
     # the callbacks for starting / stopping the polling (Notifications) task
     @callback
-    def _start_polling():
+    def _start_polling(_event=None):
         """Start polling."""
         speaker.start_polling()
 
     @callback
-    def _stop_polling():
+    def _stop_polling(_event=None):
         """Stop polling."""
         speaker.stop_polling()
 
