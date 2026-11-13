@@ -9,8 +9,8 @@ It allows you to:
   * BeoOne "Light/Control" and "Function" keypresses on select systems. YMMV, not all devices support this.
 
 
-## Installation via HACS
-The preferred type of installation is via [HACS](https://hacs.xyz). This way, you'll get updates when there are new versions.
+## Installation via Home Assistant Marketplace
+The preferred type of installation is via [Home Assistant Marketplace](https://hacs.xyz). This way, you'll get updates when there are new versions.
 
 ### Manual Installation
 
