@@ -53,7 +53,7 @@ See below for an example:
 
 The integration is a Media Player so responds to all Media Player actions.
 
-It also exposes 4 additional Actions:
+It also exposes 5 additional Actions:
 
 ```
 beoplay.beoplay_join_experience:
@@ -74,6 +74,11 @@ This command is experimental. It allows to add a URL of a DLNA asset on your net
 beoplay.beoplay_set_stand_position:
 ```
 This command is experimental. It allows to set the stand position of the TV. This would be the same name you have in your TV configuration, e.g. "StandBy" or "Start-Up".
+
+```
+beoplay.beoplay_set_speaker_group:
+```
+Select a speaker group configured on the TV. Set `entity_id` to the media player and `id` to the group name. The media player's `speaker_groups` attribute maps available names to IDs, and `speaker_group` shows the active name. These attributes refresh during polling and after selecting a group.
 
 These are called through service calls, e.g.:
 

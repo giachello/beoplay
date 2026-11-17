@@ -26,6 +26,26 @@ beoplay_add_media_to_queue:
       name: "Media URL"
       description: "A URL to add to the playback queue. Must be reachable from the speaker."
       example: "http://192.168.1.1/DLNAfile.mp3"
+beoplay_set_speaker_group:
+  name: "Set Speaker Group"
+  description: "Select a speaker group configured on the B&O TV."
+  fields:
+    entity_id:
+      name: "B&O Media player"
+      description: "A beoplay Entity ID."
+      required: true
+      selector:
+        entity:
+          integration: beoplay
+          domain: media_player
+          multiple: true
+    id:
+      name: "Speaker group"
+      description: "The speaker group name, as configured on the TV and listed in the speaker_groups attribute."
+      required: true
+      example: "Living Room"
+      selector:
+        text:
 beoplay_set_stand_position:
   name: "Set Stand Position"
   description: "Set the B&O TV stand position."

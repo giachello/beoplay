@@ -88,6 +88,7 @@ BEOPLAY_EXPERIENCE_JOIN_SERVICE = "beoplay_join_experience"
 BEOPLAY_EXPERIENCE_LEAVE_SERVICE = "beoplay_leave_experience"
 BEOPLAY_ADD_MEDIA_SERVICE = "beoplay_add_media_to_queue"
 BEOPLAY_SET_STAND_POSITION = "beoplay_set_stand_position"
+BEOPLAY_SET_SPEAKER_GROUP = "beoplay_set_speaker_group"
 
 EXPERIENCE_SCHEMA = vol.Schema(
     {
@@ -103,6 +104,13 @@ ADD_MEDIA_SCHEMA = vol.Schema(
 )
 
 SET_STAND_POSITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(CONF_ID): cv.string,
+    }
+)
+
+SET_SPEAKER_GROUP_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
         vol.Required(CONF_ID): cv.string,
@@ -174,6 +182,13 @@ async def _add_player(
         for entity in entities:
             await entity.async_set_stand_position(stand_position_id)
 
+    async def set_speaker_group(service: ServiceCall) -> ServiceResponse:
+        """Select a speaker group by its configured name."""
+        entity_ids = service.data[ATTR_ENTITY_ID]
+        for entity in hass.data[DATA_BEOPLAY].entities:
+            if entity.entity_id in entity_ids:
+                await entity.async_set_speaker_group(service.data[CONF_ID])
+
     # the callbacks for starting / stopping the polling (Notifications) task
     @callback
     def _start_polling(_event=None):
@@ -210,6 +225,13 @@ async def _add_player(
         BEOPLAY_SET_STAND_POSITION,
         set_stand_positions,
         schema=SET_STAND_POSITION_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        BEOPLAY_SET_SPEAKER_GROUP,
+        set_speaker_group,
+        schema=SET_SPEAKER_GROUP_SCHEMA,
     )
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
@@ -489,10 +511,12 @@ class BeoPlay(MediaPlayerEntity):
 
     @property
     def extra_state_attributes(self):
-        """Return the state attributes (stand positions)."""
+        """Return stand positions and speaker groups."""
         attributes = {}
         attributes["stand_positions"] = self._speaker.standPositions
         attributes["stand_position"] = self._speaker.standPosition
+        attributes["speaker_groups"] = self._speaker.speakerGroups
+        attributes["speaker_group"] = self._speaker.speakerGroup
         return attributes
 
     # ========== Service Calls ==========
@@ -590,6 +614,12 @@ class BeoPlay(MediaPlayerEntity):
         """Set the stand position."""
         await self._speaker.async_set_stand_position(stand_position_id)
 
+    async def async_set_speaker_group(self, speaker_group):
+        """Select a speaker group and refresh the active group."""
+        await self._speaker.async_set_speaker_group(speaker_group)
+        await self._speaker.async_get_speaker_groups()
+        self.async_write_ha_state()
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data and update device state."""
@@ -624,6 +654,7 @@ class BeoPlay(MediaPlayerEntity):
                 return
         try:
             await self._speaker.async_get_standby()
+            await self._speaker.async_get_speaker_groups()
             if self._on != self._speaker.on:
                 self._on = self._speaker.on
                 _LOGGER.debug("Updating ON state: %s", self._on)
