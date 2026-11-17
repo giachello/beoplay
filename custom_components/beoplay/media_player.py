@@ -86,6 +86,7 @@ DATA_BEOPLAY = "beoplay_media_player"
 
 BEOPLAY_EXPERIENCE_JOIN_SERVICE = "beoplay_join_experience"
 BEOPLAY_EXPERIENCE_LEAVE_SERVICE = "beoplay_leave_experience"
+BEOPLAY_EXPAND_SERVICE = "beoplay_expand"
 BEOPLAY_ADD_MEDIA_SERVICE = "beoplay_add_media_to_queue"
 BEOPLAY_SET_STAND_POSITION = "beoplay_set_stand_position"
 BEOPLAY_SET_SPEAKER_GROUP = "beoplay_set_speaker_group"
@@ -93,6 +94,13 @@ BEOPLAY_SET_SPEAKER_GROUP = "beoplay_set_speaker_group"
 EXPERIENCE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    }
+)
+
+EXPAND_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required("jid"): cv.string,
     }
 )
 
@@ -146,6 +154,13 @@ async def _add_player(
             entities = [e for e in entities if e.entity_id in entity_ids]
         for entity in entities:
             await entity.async_join_experience()
+
+    async def expand(service: ServiceCall) -> ServiceResponse:
+        """Add a listener to the selected players' current experience."""
+        entity_ids = service.data[ATTR_ENTITY_ID]
+        for entity in hass.data[DATA_BEOPLAY].entities:
+            if entity.entity_id in entity_ids:
+                await entity.async_expand(service.data["jid"])
 
     async def leave_experience(service: ServiceCall) -> ServiceResponse:
         """Leave an existing experience."""
@@ -201,6 +216,12 @@ async def _add_player(
         speaker.stop_polling()
 
     # Register the service callbacks
+    hass.services.async_register(
+        DOMAIN,
+        BEOPLAY_EXPAND_SERVICE,
+        expand,
+        schema=EXPAND_SCHEMA,
+    )
     hass.services.async_register(
         DOMAIN,
         BEOPLAY_EXPERIENCE_JOIN_SERVICE,
@@ -587,13 +608,17 @@ class BeoPlay(MediaPlayerEntity):
         """Join on ongoing experience."""
         await self._speaker.async_join_experience()
 
+    async def async_expand(self, jid):
+        """Add the device identified by its JID to this player's experience."""
+        await self._speaker.async_expand(jid)
+
     async def async_join_players(self, group_members):
         """Join `group_members` as a player group with the current player."""
         entities = self.hass.data[DATA_BEOPLAY].entities
 
         entities = [e for e in entities if e.entity_id in group_members]
         for entity in entities:
-            await entity.async_join_experience()
+            await self.async_expand(entity.jid)
 
     async def async_leave_experience(self):
         """Leave experience."""

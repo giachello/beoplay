@@ -53,7 +53,12 @@ See below for an example:
 
 The integration is a Media Player so responds to all Media Player actions.
 
-It also exposes 5 additional Actions:
+It also exposes 6 additional Actions:
+
+```
+beoplay.beoplay_expand:
+```
+Add a device to a specific player's current playback experience. Set `entity_id` to the playing media player and `jid` to the listener's B&O JID (for example, `1234.1234567.12345678@products.bang-olufsen.com`). The native `media_player.join` action also uses Expand to add the selected group members to the target player's experience.
 
 ```
 beoplay.beoplay_join_experience:

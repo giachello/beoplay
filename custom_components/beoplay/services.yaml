@@ -1,3 +1,23 @@
+beoplay_expand:
+  name: "Expand Experience"
+  description: "Add a device to the selected media player's current playback experience."
+  fields:
+    entity_id:
+      name: "B&O Media player"
+      description: "The beoplay media player whose playback experience to expand."
+      required: true
+      selector:
+        entity:
+          integration: beoplay
+          domain: media_player
+          multiple: true
+    jid:
+      name: "Listener JID"
+      description: "The JID of the device to add to the playback experience."
+      required: true
+      example: "1234.1234567.12345678@products.bang-olufsen.com"
+      selector:
+        text:
 beoplay_join_experience:
   name: "Join Experience"
   description: "Join an ongoing playback experience. E.g., the speaker starts playback of a CD already playing on another device."
